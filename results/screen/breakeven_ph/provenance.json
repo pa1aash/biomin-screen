@@ -1,0 +1,26 @@
+{
+ "classes": [
+  "C_mid",
+  "C_hi"
+ ],
+ "code_sha": "1.0.0",
+ "edges": {
+  "C_hi": [
+   4.4,
+   4.5
+  ],
+  "C_mid": [
+   4.2,
+   4.3
+  ]
+ },
+ "git_dirty": false,
+ "ladder_file": "results/pourbaix/ladder/ladder.csv",
+ "ladder_sha256": "d7bdd907ab83e2153407cceda93f125289086402527066e3b2780b4a4c338526",
+ "n_rows": 26,
+ "nu_salt": 1,
+ "run_id": "breakeven",
+ "temperature_K": 298.15,
+ "thresholds_copy_file": "configs/thresholds.yaml",
+ "thresholds_copy_sha256": "5ca14633fe1b9aa193dbfa71e8be7a87c671b36fc58d7c420d29538d2fd24763"
+}

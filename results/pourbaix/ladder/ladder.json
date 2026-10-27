@@ -1,0 +1,43 @@
+{
+ "stage": "ladder",
+ "generated_utc": "2026-10-27T08:44:21Z",
+ "git_sha": "1.0.0",
+ "margins_source": {
+  "file": "data/thresholds.md",
+  "file_sha256": "bf9ccf6c5eda08485e4d1e91db63cec53658ed2158b7cda46b525b70c62ade86",
+  "block_sha256": "3d4ef69678e9ef7ccae729759c01edfac1c117f50d9fd5616e13d9c5d868b2fc"
+ },
+ "n_rows": 81,
+ "columns": [
+  "phase",
+  "framing",
+  "stage",
+  "reaction_id",
+  "route",
+  "E_ub_V",
+  "E_lb_V",
+  "margin_V",
+  "budget_status",
+  "benchmark_status",
+  "k1_class_lfp",
+  "k1_class_42_43",
+  "k1_class_44_45",
+  "k1_verdict",
+  "row_ids",
+  "notes"
+ ],
+ "bracket": {
+  "E_lb": "pending",
+  "status": "bracket pending (hydration_free_energy_clo4 is a gap; Ca2+ and Al3+ transfer free energies to the cell solvent are gaps)"
+ },
+ "direct_correction": {
+  "E_ub_V": 4.9818,
+  "m_V": 0.19,
+  "was": {
+   "E_ub_V": 4.9664,
+   "m_V": 0.2907
+  },
+  "for": "the crystalline reference row; the governing amorphous row does not use the correction"
+ },
+ "a_al3_oxide": "unchanged: the governing and reference rows of the benchmark are adopted; no input moved"
+}

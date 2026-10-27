@@ -1,0 +1,145 @@
+grid,source,phase,pH,n_cells,n_passing,passing_fraction,min_passing_Ca_T_mol_dm3,min_passing_P_T_mol_dm3,CaP_min,CaP_max
+alkaline,fixed,calcite,10.0,108,72,0.666667,0.0001,,,
+alkaline,fixed,calcite,12.0,108,74,0.685185,1e-05,,,
+alkaline,fixed,calcite,13.0,108,72,0.666667,0.0001,,,
+alkaline,fixed,aragonite,10.0,108,72,0.666667,0.0001,,,
+alkaline,fixed,aragonite,12.0,108,72,0.666667,0.0001,,,
+alkaline,fixed,aragonite,13.0,108,72,0.666667,0.0001,,,
+alkaline,fixed,ACC,10.0,108,28,0.259259,0.01,,,
+alkaline,fixed,ACC,12.0,108,30,0.277778,0.01,,,
+alkaline,fixed,ACC,13.0,108,30,0.277778,0.01,,,
+alkaline,fixed,HAp,10.0,216,133,0.615741,1e-05,1e-06,0.001,100000.00000000001
+alkaline,fixed,HAp,12.0,216,139,0.643519,1e-05,1e-06,0.001,100000.00000000001
+alkaline,fixed,HAp,13.0,216,143,0.662037,1e-05,1e-06,0.001,100000.00000000001
+alkaline,fixed,ACP,10.0,216,21,0.097222,0.01,0.0001,0.09999999999999999,1000.0
+alkaline,fixed,ACP,12.0,216,18,0.083333,0.01,0.0001,1.0,1000.0
+alkaline,fixed,ACP,13.0,216,18,0.083333,0.01,0.0001,1.0,1000.0
+alkaline,fixed,b-TCP,10.0,216,108,0.500000,0.0001,1e-06,0.01,100000.00000000001
+alkaline,fixed,b-TCP,12.0,216,96,0.444444,0.0001,1e-06,0.09999999999999999,100000.00000000001
+alkaline,fixed,b-TCP,13.0,216,96,0.444444,0.0001,1e-06,0.09999999999999999,100000.00000000001
+alkaline,fixed,OCP (original key),10.0,216,0,0.000000,,,,
+alkaline,fixed,OCP (original key),12.0,216,0,0.000000,,,,
+alkaline,fixed,OCP (original key),13.0,216,0,0.000000,,,,
+alkaline,fixed,brushite,10.0,216,0,0.000000,,,,
+alkaline,fixed,brushite,12.0,216,0,0.000000,,,,
+alkaline,fixed,brushite,13.0,216,0,0.000000,,,,
+alkaline,fixed,a-TCP,10.0,216,0,0.000000,,,,
+alkaline,fixed,a-TCP,12.0,216,0,0.000000,,,,
+alkaline,fixed,a-TCP,13.0,216,0,0.000000,,,,
+alkaline,fixed,Li3PO4,10.0,216,0,0.000000,,,,
+alkaline,fixed,Li3PO4,12.0,216,0,0.000000,,,,
+alkaline,fixed,Li3PO4,13.0,216,0,0.000000,,,,
+alkaline,rerun,HAp,10.0,216,133,0.615741,1e-05,1e-06,0.001,100000.00000000001
+alkaline,rerun,HAp,12.0,216,139,0.643519,1e-05,1e-06,0.001,100000.00000000001
+alkaline,rerun,HAp,13.0,216,143,0.662037,1e-05,1e-06,0.001,100000.00000000001
+alkaline,rerun,ACP,10.0,216,21,0.097222,0.01,0.0001,0.09999999999999999,1000.0
+alkaline,rerun,ACP,12.0,216,18,0.083333,0.01,0.0001,1.0,1000.0
+alkaline,rerun,ACP,13.0,216,18,0.083333,0.01,0.0001,1.0,1000.0
+alkaline,rerun,b-TCP,10.0,216,108,0.500000,0.0001,1e-06,0.01,100000.00000000001
+alkaline,rerun,b-TCP,12.0,216,96,0.444444,0.0001,1e-06,0.09999999999999999,100000.00000000001
+alkaline,rerun,b-TCP,13.0,216,96,0.444444,0.0001,1e-06,0.09999999999999999,100000.00000000001
+alkaline,rerun,OCP (original key),10.0,216,0,0.000000,,,,
+alkaline,rerun,OCP (original key),12.0,216,0,0.000000,,,,
+alkaline,rerun,OCP (original key),13.0,216,0,0.000000,,,,
+alkaline,rerun,OCP (Ca4H key),10.0,216,36,0.166667,0.001,0.0001,0.01,1000.0
+alkaline,rerun,OCP (Ca4H key),12.0,216,23,0.106481,0.001,0.0001,0.09999999999999999,1000.0
+alkaline,rerun,OCP (Ca4H key),13.0,216,15,0.069444,0.01,0.001,1.0,100.0
+alkaline,rerun,brushite,10.0,216,3,0.013889,0.1,0.1,1.0,1.0
+alkaline,rerun,brushite,12.0,216,0,0.000000,,,,
+alkaline,rerun,brushite,13.0,216,0,0.000000,,,,
+alkaline,rerun,a-TCP,10.0,216,0,0.000000,,,,
+alkaline,rerun,a-TCP,12.0,216,0,0.000000,,,,
+alkaline,rerun,a-TCP,13.0,216,0,0.000000,,,,
+alkaline,rerun,Li3PO4,10.0,216,0,0.000000,,,,
+alkaline,rerun,Li3PO4,12.0,216,0,0.000000,,,,
+alkaline,rerun,Li3PO4,13.0,216,0,0.000000,,,,
+acid,fixed,calcite,4.5,54,0,0.000000,,,,
+acid,fixed,calcite,5.5,54,0,0.000000,,,,
+acid,fixed,calcite,6.5,54,13,0.240741,0.01,,,
+acid,fixed,calcite,7.5,54,23,0.425926,0.001,,,
+acid,fixed,calcite,8.5,54,32,0.592593,0.0001,,,
+acid,fixed,aragonite,4.5,54,0,0.000000,,,,
+acid,fixed,aragonite,5.5,54,0,0.000000,,,,
+acid,fixed,aragonite,6.5,54,11,0.203704,0.01,,,
+acid,fixed,aragonite,7.5,54,22,0.407407,0.001,,,
+acid,fixed,aragonite,8.5,54,31,0.574074,0.0001,,,
+acid,fixed,ACC,4.5,54,0,0.000000,,,,
+acid,fixed,ACC,5.5,54,0,0.000000,,,,
+acid,fixed,ACC,6.5,54,0,0.000000,,,,
+acid,fixed,ACC,7.5,54,0,0.000000,,,,
+acid,fixed,ACC,8.5,54,5,0.092593,0.1,,,
+acid,fixed,HAp,4.5,108,5,0.046296,0.1,0.01,1.0,10.0
+acid,fixed,HAp,5.5,108,18,0.166667,0.01,0.0001,0.09999999999999999,1000.0
+acid,fixed,HAp,6.5,108,42,0.388889,0.0001,1e-06,0.001,100000.00000000001
+acid,fixed,HAp,7.5,108,59,0.546296,0.0001,1e-06,0.001,100000.00000000001
+acid,fixed,HAp,8.5,108,69,0.638889,1e-05,1e-06,0.001,100000.00000000001
+acid,fixed,ACP,4.5,108,0,0.000000,,,,
+acid,fixed,ACP,5.5,108,2,0.018519,0.1,0.1,1.0,1.0
+acid,fixed,ACP,6.5,108,9,0.083333,0.01,0.01,0.09999999999999999,10.0
+acid,fixed,ACP,7.5,108,17,0.157407,0.01,0.001,0.09999999999999999,100.0
+acid,fixed,ACP,8.5,108,21,0.194444,0.01,0.0001,0.09999999999999999,1000.0
+acid,fixed,b-TCP,4.5,108,3,0.027778,0.1,0.1,1.0,1.0
+acid,fixed,b-TCP,5.5,108,14,0.129630,0.01,0.001,0.09999999999999999,100.0
+acid,fixed,b-TCP,6.5,108,31,0.287037,0.001,1e-05,0.01,10000.0
+acid,fixed,b-TCP,7.5,108,46,0.425926,0.0001,1e-06,0.001,100000.00000000001
+acid,fixed,b-TCP,8.5,108,51,0.472222,0.0001,1e-06,0.01,100000.00000000001
+acid,fixed,OCP (original key),4.5,108,0,0.000000,,,,
+acid,fixed,OCP (original key),5.5,108,0,0.000000,,,,
+acid,fixed,OCP (original key),6.5,108,0,0.000000,,,,
+acid,fixed,OCP (original key),7.5,108,0,0.000000,,,,
+acid,fixed,OCP (original key),8.5,108,0,0.000000,,,,
+acid,fixed,brushite,4.5,108,0,0.000000,,,,
+acid,fixed,brushite,5.5,108,0,0.000000,,,,
+acid,fixed,brushite,6.5,108,0,0.000000,,,,
+acid,fixed,brushite,7.5,108,0,0.000000,,,,
+acid,fixed,brushite,8.5,108,0,0.000000,,,,
+acid,fixed,a-TCP,4.5,108,0,0.000000,,,,
+acid,fixed,a-TCP,5.5,108,0,0.000000,,,,
+acid,fixed,a-TCP,6.5,108,0,0.000000,,,,
+acid,fixed,a-TCP,7.5,108,0,0.000000,,,,
+acid,fixed,a-TCP,8.5,108,0,0.000000,,,,
+acid,fixed,Li3PO4,4.5,108,0,0.000000,,,,
+acid,fixed,Li3PO4,5.5,108,0,0.000000,,,,
+acid,fixed,Li3PO4,6.5,108,0,0.000000,,,,
+acid,fixed,Li3PO4,7.5,108,0,0.000000,,,,
+acid,fixed,Li3PO4,8.5,108,0,0.000000,,,,
+acid,rerun,HAp,4.5,108,5,0.046296,0.1,0.01,1.0,10.0
+acid,rerun,HAp,5.5,108,18,0.166667,0.01,0.0001,0.09999999999999999,1000.0
+acid,rerun,HAp,6.5,108,42,0.388889,0.0001,1e-06,0.001,100000.00000000001
+acid,rerun,HAp,7.5,108,59,0.546296,0.0001,1e-06,0.001,100000.00000000001
+acid,rerun,HAp,8.5,108,69,0.638889,1e-05,1e-06,0.001,100000.00000000001
+acid,rerun,ACP,4.5,108,0,0.000000,,,,
+acid,rerun,ACP,5.5,108,2,0.018519,0.1,0.1,1.0,1.0
+acid,rerun,ACP,6.5,108,9,0.083333,0.01,0.01,0.09999999999999999,10.0
+acid,rerun,ACP,7.5,108,17,0.157407,0.01,0.001,0.09999999999999999,100.0
+acid,rerun,ACP,8.5,108,21,0.194444,0.01,0.0001,0.09999999999999999,1000.0
+acid,rerun,b-TCP,4.5,108,3,0.027778,0.1,0.1,1.0,1.0
+acid,rerun,b-TCP,5.5,108,14,0.129630,0.01,0.001,0.09999999999999999,100.0
+acid,rerun,b-TCP,6.5,108,31,0.287037,0.001,1e-05,0.01,10000.0
+acid,rerun,b-TCP,7.5,108,46,0.425926,0.0001,1e-06,0.001,100000.00000000001
+acid,rerun,b-TCP,8.5,108,51,0.472222,0.0001,1e-06,0.01,100000.00000000001
+acid,rerun,OCP (original key),4.5,108,0,0.000000,,,,
+acid,rerun,OCP (original key),5.5,108,0,0.000000,,,,
+acid,rerun,OCP (original key),6.5,108,0,0.000000,,,,
+acid,rerun,OCP (original key),7.5,108,0,0.000000,,,,
+acid,rerun,OCP (original key),8.5,108,0,0.000000,,,,
+acid,rerun,OCP (Ca4H key),4.5,108,5,0.046296,0.1,0.01,1.0,10.0
+acid,rerun,OCP (Ca4H key),5.5,108,15,0.138889,0.01,0.001,0.09999999999999999,100.0
+acid,rerun,OCP (Ca4H key),6.5,108,28,0.259259,0.001,0.0001,0.01,1000.0
+acid,rerun,OCP (Ca4H key),7.5,108,41,0.379630,0.0001,1e-05,0.001,10000.0
+acid,rerun,OCP (Ca4H key),8.5,108,42,0.388889,0.0001,1e-05,0.01,10000.0
+acid,rerun,brushite,4.5,108,9,0.083333,0.01,0.01,0.09999999999999999,10.0
+acid,rerun,brushite,5.5,108,18,0.166667,0.001,0.001,0.01,100.0
+acid,rerun,brushite,6.5,108,22,0.203704,0.001,0.001,0.01,100.0
+acid,rerun,brushite,7.5,108,24,0.222222,0.001,0.001,0.01,100.0
+acid,rerun,brushite,8.5,108,12,0.111111,0.01,0.01,0.09999999999999999,10.0
+acid,rerun,a-TCP,4.5,108,0,0.000000,,,,
+acid,rerun,a-TCP,5.5,108,0,0.000000,,,,
+acid,rerun,a-TCP,6.5,108,0,0.000000,,,,
+acid,rerun,a-TCP,7.5,108,0,0.000000,,,,
+acid,rerun,a-TCP,8.5,108,0,0.000000,,,,
+acid,rerun,Li3PO4,4.5,108,0,0.000000,,,,
+acid,rerun,Li3PO4,5.5,108,0,0.000000,,,,
+acid,rerun,Li3PO4,6.5,108,0,0.000000,,,,
+acid,rerun,Li3PO4,7.5,108,0,0.000000,,,,
+acid,rerun,Li3PO4,8.5,108,0,0.000000,,,,

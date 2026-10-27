@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "If you use this software or its data, please cite it as below."
+type: software
+title: "Processing- and cell-stage thermodynamic screening of nacre- and bone-inspired carbonate and phosphate phases on aluminium current collectors in fluorine-free lithium-ion cells with an open screening framework"
+abstract: "An open framework that screens candidate mineral coatings, biopolymer-templated carbonate and phosphate phases, against two thermodynamic tests: dissolution in the alkaline aqueous slurry of electrode processing, and the oxidation onset at the aluminium current collector of a lithium-ion cell. Inputs are sourced thermochemistry with propagated uncertainty; outputs are stage-resolved exclusion maps, break-even ratios, required-precision maps and the input value at which each verdict flips. The repository re-derives every number, table and data figure of the accompanying paper from the sourced parameter file and cached inputs. It does not test any coating experimentally."
+version: 1.0.0
+date-released: 2026-10-27
+license: MIT
+repository-code: "https://github.com/pa1aash/biomin-screen"
+keywords:
+  - thermodynamic screening
+  - biomimetic mineralisation
+  - biopolymer-templated carbonate
+  - biopolymer-templated phosphate
+  - calcium carbonate
+  - calcium phosphate
+  - aluminium current collector
+  - lithium-ion cathode coating
+  - Pourbaix diagram
+  - uncertainty propagation
+authors:
+  - family-names: "Bharti"
+    given-names: "Palash"
+    orcid: "https://orcid.org/0009-0000-8926-5520"
+    affiliation: "Jayshree Periwal International School, Jaipur, India"
+  - family-names: "Gang"
+    given-names: "Palaash"
+    orcid: "https://orcid.org/0009-0006-7448-9488"
+    affiliation: "Indus International School, Pune"
+  - family-names: "Goswamy"
+    given-names: "Ahaana"
+    orcid: "https://orcid.org/0009-0008-0448-1741"
+    affiliation: "Grainger College of Engineering, University of Illinois Urbana-Champaign"
+  - family-names: "Agarwal"
+    given-names: "Kabir"
+    orcid: "https://orcid.org/0009-0007-9790-9622"
+    affiliation: "Grainger College of Engineering, University of Illinois Urbana-Champaign"
+  - family-names: "Kochhar"
+    given-names: "Jayveer Sachin"
+    orcid: "https://orcid.org/0009-0009-3497-1079"
+    affiliation: "Stanford University"
+  - family-names: "Braun"
+    given-names: "Paul V."
+    orcid: "https://orcid.org/0000-0003-4079-8160"
+    affiliation: "Department of Materials Science and Engineering, University of Illinois Urbana-Champaign, Urbana, Illinois 61801, USA"

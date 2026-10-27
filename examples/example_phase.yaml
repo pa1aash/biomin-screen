@@ -1,0 +1,25 @@
+# A candidate phase as the screen reads it. Copy the block under `minerals:` in configs/screen.yaml to add it to the
+# screen; this file is what examples/run_example.py reads. Every key under `keys` names an entry of data/params.yaml.
+phase:
+  name: example_btcp
+  formula_unit: Ca3(PO4)2
+  framing: crystalline beta-tricalcium phosphate
+  phase_state: crystalline
+  speciation: phosphate
+  x_symbol: a_PO4
+  stoichiometry:
+    nu_ca: 3
+    nu_x: 2
+    nu_y: 0
+    n_hyd: 0
+  keys:
+    ksp: log10_ksp_btcp      # solubility product per formula unit, with its uncertainty
+    v_m: v_m_btcp            # molar volume (needed by the nucleation and thin-film tests only)
+# States to test: free-ion activities at the processing stage (illustrative grid, not a design grid of the paper).
+states:
+  a_ca: [1.0e-4, 1.0e-3, 1.0e-2]
+  a_po4: [1.0e-12, 1.0e-10, 1.0e-8]
+  a_w: 1.0
+# The credible level at which a state counts as passing: Omega >= 1 must hold for the K_sp quantile that makes the
+# phase least stable at that level.
+p_cred: 0.9

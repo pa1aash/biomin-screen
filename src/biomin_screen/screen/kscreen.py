@@ -1,0 +1,741 @@
+"""Evaluators K1 to K4 for solid-like nuclei.
+
+K1 is READ from the ladder file (results/pourbaix/ladder/ladder.csv, an input path; the v2 layout
+and the older results/pourbaix/oxidation_ladder/ladder.csv layout are still read); it is never recomputed here.
+K2, K3 and K4 are evaluated on the draws of the screen chain (biomin_screen.screen.chain with a Mineral object):
+
+    K2  Omega_bulk >= 1                     worst specified state, shared band-mass rule at p_cred
+    K3  accessible dose window              DG_het(D) <= B_acc and DG_hom(D) > B_acc, with C3a: cos(theta) >= m_cos;
+                                            the dose where bulk precipitation takes over is stated with every row
+    K4  S_spread >= m_S OR closure          closure: N_nuc >= tan^2(theta/2)/(2 d_max^2); falsified only if both fail
+                                            on the same draw
+
+Rules shared with the carbonate links (biomin_screen.screen.decision): the band-mass verdict at p_cred, the worst-state
+combination, the framing rule (falsified only under every framing, feasible under at least one, named), and the
+admissibility restriction (gamma_sl_insitu >= 0 at every specified state; refused draws counted, never
+clipped; the retained mass M_adm printed beside every verdict that uses gamma_sl). The deletion test applies to
+K3 and K4 only; a pass that does not degrade without the template is labelled ``generic``.
+
+Margins and decision constants come from configs/screen.yaml, block ``k_screen``, whose values are
+PROVISIONAL placeholders, not thresholds of the decision rule. Nothing here sets a prior, a
+threshold or a verdict rule.
+
+Which phases proceed: a phase proceeds to K3 and K4 unless its K1 verdict is
+falsified at EVERY specified cutoff class; a phase inconclusive or undetermined at any class proceeds, and its K1
+status is shown in its row. Proceeding is not passing: the K1 column keeps its verdict. The route layer (liquid
+precursor, in-situ formation, hydrolysis) is evaluated by biomin_screen.screen.routes and assembled into stage rows by
+biomin_screen.screen.stage_rows.
+"""
+import csv
+from dataclasses import dataclass
+from pathlib import Path
+
+from biomin_screen import _util
+
+import numpy as np
+
+from biomin_screen.screen import admissibility, decision, routes
+
+LADDER = Path("results") / "pourbaix" / "ladder" / "ladder.csv"
+LADDER_V2 = Path("results") / "pourbaix" / "benchmark" / "ladder_v2.csv"
+LADDER_V1 = Path("results") / "pourbaix" / "oxidation_ladder" / "ladder.csv"
+#: Synthetic ladder in the v2 layout for the dry runs (the v2 ladder file is not shipped); never reported.
+MOCK_LADDER = Path("configs") / "mock_k1_ladder_v2.csv"
+FRAMINGS = ("crystalline", "amorphous")
+STAGES = ("slurry", "cell", "conversion")
+STATES_OF_K1 = ("feasible", "falsified", "inconclusive", "undetermined", "not excluded")
+REQUIRED_COLUMNS = ("phase", "class", "status", "note")
+#: Bracket columns of the v2 ladder, first match wins. The v1 ladder has the solid-salt onset only
+#: (tier1_onset_V), which is E_ub; E_lb is then 'pending'.
+E_UB_COLUMNS = ("E_ub_V", "e_ub_V", "E_ub", "tier1_onset_V")
+E_LB_COLUMNS = ("E_lb_V", "e_lb_V", "E_lb")
+#: A verdict column of the ladder is read as is (normalised to STATES_OF_K1); otherwise the verdict is read off status.
+VERDICT_COLUMNS = ("k1_verdict", "verdict")
+#: The v3 ladder is wide: one row per (phase, framing, stage, reaction_id) with one verdict column per cutoff
+#: class. The column order is the class order (lowest cutoff first); the class names are those of the thresholds block
+#: (regimes.R-cell.parameters.cutoff_classes). No cutoff value is typed here.
+V3_CLASS_COLUMNS = (("k1_class_lfp", "C_lo"), ("k1_class_42_43", "C_mid"), ("k1_class_44_45", "C_hi"))
+V3_MARKER = "k1_class_lfp"
+V3_AGGREGATE = "ALL"
+V3_NO_REACTION = "-"
+V3_STAGES = STAGES + ("comparator", "control")
+
+
+class K1Error(ValueError):
+    """The K1 ladder file does not have the specified layout."""
+
+
+class KConfigError(ValueError):
+    """configs/screen.yaml k_screen is missing or incomplete."""
+
+
+# ------------------------------------------------------------------ configuration
+def k_config(cfg):
+    """The k_screen block of screen.yaml; refuses a block that does not mark itself provisional."""
+    block = (cfg or {}).get("k_screen")
+    if not isinstance(block, dict):
+        raise KConfigError("configs/screen.yaml has no k_screen block")
+    if block.get("provisional") is not True:
+        raise KConfigError("k_screen must be marked provisional: true")
+    for key in ("p_cred", "p_deg", "m_cos", "m_S", "ln_dose_axis"):
+        if key not in block:
+            raise KConfigError("k_screen.%s is required" % key)
+    if not 0.5 < float(block["p_cred"]) < 1:
+        raise KConfigError("k_screen.p_cred must lie in (1/2, 1)")
+    return block
+
+
+# ------------------------------------------------------------------ K1: read, never recomputed
+def k1_verdict(status, note, verdict=None):
+    """K1 verdict of one ladder row at its cutoff class .
+
+    A verdict the ladder carries is taken as is (read, not recomputed). Otherwise from status: 'below' falsifies at tier 1;
+    'above' or 'pass' passes only when the row does not say it is an upper bound (the solid-salt sink bounds the
+    onset from above: a falsification stands, a pass is inconclusive); 'undetermined' stays undetermined (never
+    passes); every other status (within the bracket, within budget) is inconclusive.
+    """
+    v = (verdict or "").strip().lower()
+    if v:
+        if v.startswith("falsified"):
+            return "falsified"
+        if v.startswith("not excluded"):
+            return "not excluded"
+        for word in ("feasible", "inconclusive", "undetermined"):
+            if v.startswith(word):
+                return word
+        raise K1Error("unknown K1 verdict %r in the ladder" % verdict)
+    s = (status or "").strip().lower()
+    if s == "below":
+        return "falsified"
+    if s in ("above", "pass"):
+        n = (note or "").lower()
+        return "inconclusive" if ("upper bound" in n or "not a pass" in n or "conditional" in n) else "feasible"
+    if s == "undetermined":
+        return "undetermined"
+    return "inconclusive"
+
+
+def _float_or_none(text):
+    t = (text or "").strip()
+    if not t:
+        return None
+    try:
+        v = float(t)
+    except ValueError:
+        return None
+    return v if np.isfinite(v) else None
+
+
+def _first(rec, columns):
+    for c in columns:
+        if c in rec and (rec[c] or "").strip():
+            return c, rec[c]
+    return None, None
+
+
+def _display_path(path):
+    """The path of an input file as recorded in outputs: relative to the repository root where it lies inside."""
+    try:
+        return Path(path).resolve().relative_to(Path(_util.repo_root()).resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
+@dataclass(frozen=True)
+class K1Row:
+    phase: str
+    role: str
+    cls: str
+    framing: str
+    onset_V: object
+    status: str
+    note: str
+    verdict: str
+    stage: str = "cell"
+    E_ub: object = None
+    E_lb: object = None
+    E_lb_status: str = "pending"
+    cutoff_inf: object = None
+    reaction_id: str = ""
+    margin: object = None                    # m_V as written; None where the budget is incomplete or the margin symbolic
+    budget_status: str = ""
+    overall: str = ""                        # the k1_verdict column of a v3 row (read, then checked against the classes)
+    benchmark_status: str = ""
+
+    def bracket(self):
+        """The K1 bracket fields of a results row (schema v5); E_lb is 'pending' while unsourced."""
+        return {"E_ub": self.E_ub, "E_lb": self.E_lb, "E_lb_status": self.E_lb_status,
+                "E_ub_status": "sourced" if self.E_ub is not None else "pending"}
+
+
+class K1Table:
+    """The ladder rows by (phase, cutoff class, framing); at most two rows (framings) per phase and class."""
+
+    def __init__(self, rows, path=""):
+        self.rows = {}
+        self.path = _display_path(path)
+        self.layout = "v2"
+        self.skipped = []                    # v3 rows that carry no K1 verdict (conversion steps, tier-2-only matrix rows)
+        self.reactions = []                  # v3 per-reaction detail rows (margin None where symbolic or incomplete)
+        self.inconsistencies = []            # v3 rows whose written verdicts disagree with the specified reading rules
+        for r in rows:
+            key = (r.phase, r.cls, r.framing)
+            if key in self.rows:
+                raise K1Error("%s: two rows for phase %r, class %r and framing %r" % (path, *key))
+            self.rows[key] = r
+        for (phase, cls), n in _counts(self.rows).items():
+            if n > len(FRAMINGS):
+                raise K1Error("%s: %d rows for phase %r and class %r (at most %d, one per framing)"
+                              % (path, n, phase, cls, len(FRAMINGS)))
+
+    def phases(self):
+        return sorted({k[0] for k in self.rows})
+
+    def classes(self, phase):
+        seen = []
+        for (p, c, _), _r in self.rows.items():
+            if p == phase and c not in seen:
+                seen.append(c)
+        return seen
+
+    def framings(self, phase):
+        return sorted({f for (p, _, f) in self.rows if p == phase})
+
+    def verdicts(self, phase, framing):
+        """{cutoff class: K1 verdict} of one phase and framing; empty when the ladder has no such row."""
+        return {c: self.rows[(phase, c, framing)].verdict for c in self.classes(phase) if (phase, c, framing) in self.rows}
+
+    def passing_classes(self, phase, framing):
+        return [c for c, v in self.verdicts(phase, framing).items() if v == "feasible"]
+
+    def row(self, phase, cls, framing):
+        return self.rows.get((phase, cls, framing))
+
+    def low_cutoff_class(self, phase=None):
+        """The specified class with the lowest cutoff (cutoff_inf_V); the first listed when the column is absent."""
+        rows = [r for (p, _, _), r in self.rows.items() if phase is None or p == phase]
+        with_c = [r for r in rows if r.cutoff_inf is not None]
+        if with_c:
+            return min(with_c, key=lambda r: r.cutoff_inf).cls
+        return rows[0].cls if rows else None
+
+
+def _counts(rows):
+    out = {}
+    for phase, cls, _ in rows:
+        out[(phase, cls)] = out.get((phase, cls), 0) + 1
+    return out
+
+
+def read_k1(path):
+    """Read the ladder. Comment lines start with '#'. A ``framing`` column (crystalline or amorphous) selects
+    the framing of a row and defaults to crystalline; two rows per phase and class are accepted, one per framing.
+    A ``stage`` column defaults to cell (K1 applies to the cell-stage phase). The bracket ends E_ub and E_lb
+    are read from E_UB_COLUMNS and E_LB_COLUMNS; a missing E_lb is 'pending' (unsourced), never zero."""
+    path = Path(path)
+    lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip() and not ln.startswith("#")]
+    reader = csv.DictReader(lines)
+    if V3_MARKER in (reader.fieldnames or []):
+        return _read_k1_v3(path, reader)
+    missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
+    if missing:
+        raise K1Error("%s: ladder columns missing: %s" % (path, missing))
+    rows = []
+    for rec in reader:
+        framing = (rec.get("framing") or "crystalline").strip() or "crystalline"
+        if framing not in FRAMINGS:
+            raise K1Error("%s: framing %r of phase %r is not one of %s" % (path, framing, rec["phase"], FRAMINGS))
+        stage = (rec.get("stage") or "cell").strip() or "cell"
+        if stage not in STAGES:
+            raise K1Error("%s: stage %r of phase %r is not one of %s" % (path, stage, rec["phase"], STAGES))
+        _, ub = _first(rec, E_UB_COLUMNS)
+        _, lb = _first(rec, E_LB_COLUMNS)
+        e_ub, e_lb = _float_or_none(ub), _float_or_none(lb)
+        _, vtext = _first(rec, VERDICT_COLUMNS)
+        rows.append(K1Row(rec["phase"], rec.get("role", ""), rec["class"], framing, rec.get("tier1_onset_V", ""),
+                          rec["status"], rec["note"], k1_verdict(rec["status"], rec["note"], vtext), stage=stage,
+                          E_ub=e_ub, E_lb=e_lb, E_lb_status="sourced" if e_lb is not None else "pending",
+                          cutoff_inf=_float_or_none(rec.get("cutoff_inf_V"))))
+    return K1Table(rows, path)
+
+
+def _v3_class_verdict(text, where):
+    """Verdict of one class cell of a v3 row; 'pass' (the README's word) is the screen's 'feasible'."""
+    v = (text or "").strip().lower()
+    if not v:
+        raise K1Error("%s: empty class verdict" % where)
+    return "feasible" if v == "pass" else k1_verdict("", "", v)
+
+
+def overall_verdict(by_class):
+    """The v3 'k1_verdict' column from the class verdicts (ladder_README): falsified at every class is falsified, any
+    pass is feasible, otherwise undetermined if a class is undetermined and none falsifies, otherwise inconclusive."""
+    v = list(by_class.values())
+    if v and all(x == "falsified" for x in v):
+        return "falsified"
+    if "feasible" in v:
+        return "feasible"
+    if "undetermined" in v and "falsified" not in v:
+        return "undetermined"
+    return "inconclusive"
+
+
+def _read_k1_v3(path, reader):
+    """The v3 ladder. Reading rules, all from ladder_README.md:
+    - one K1 record per (phase, framing, stage): the ``ALL`` aggregate row, or the single ``-`` row of a phase with no
+      reaction (a gap); per-reaction rows are detail, kept in ``reactions`` and not used for a verdict;
+    - the three class columns become the classes C_lo, C_mid, C_hi of the thresholds block;
+    - E_lb is 'pending' in every row (read as pending, never zero); an empty margin_V (budget incomplete or symbolic) is
+      margin None with the budget_status kept; E_ub empty is pending;
+    - framing 'both' is read as both framings; a tier-2-only row and a conversion step have no K1 verdict and are listed in
+      ``skipped``;
+    - the written k1_verdict is checked against the class verdicts and the budget; a disagreement is listed in
+      ``inconsistencies`` and the row is read as written."""
+    rows, skipped, bad, reactions = [], [], [], []
+    for n, rec in enumerate(reader, start=2):
+        phase, framing, stage = rec["phase"].strip(), (rec["framing"] or "").strip(), rec["stage"].strip()
+        rid = (rec["reaction_id"] or "").strip()
+        where = "%s line %d (%s)" % (path, n, phase)
+        if stage not in V3_STAGES:
+            raise K1Error("%s: stage %r is not one of %s" % (where, stage, V3_STAGES))
+        cells = [(cls, (rec[col] or "").strip().lower()) for col, cls in V3_CLASS_COLUMNS]
+        if stage == "conversion" or all(v == "n/a" for _, v in cells):
+            skipped.append({"phase": phase, "stage": stage, "reaction_id": rid, "why": "conversion step (no K1 verdict)"})
+            continue
+        if framing.startswith("n/a"):
+            skipped.append({"phase": phase, "stage": stage, "reaction_id": rid, "why": "tier 2 only (no tier-1 K1 row)"})
+            continue
+        if rid not in (V3_AGGREGATE, V3_NO_REACTION):                         # per-reaction detail row
+            reactions.append({"phase": phase, "framing": framing, "stage": stage, "reaction_id": rid,
+                              "E_ub": _float_or_none(rec["E_ub_V"]), "E_lb": _float_or_none(rec["E_lb_V"]),
+                              "margin": _float_or_none(rec["margin_V"]), "budget_status": (rec["budget_status"] or "").strip()})
+            continue
+        framings = FRAMINGS if framing == "both" else (framing,)
+        for f in framings:
+            if f not in FRAMINGS:
+                raise K1Error("%s: framing %r is not one of %s" % (where, f, FRAMINGS))
+        e_ub, e_lb, margin = (_float_or_none(rec[c]) for c in ("E_ub_V", "E_lb_V", "margin_V"))
+        by_class = {cls: _v3_class_verdict(v, where) for cls, v in cells}
+        budget = (rec["budget_status"] or "").strip()
+        overall = (rec["k1_verdict"] or "").strip().lower()
+        if overall != overall_verdict(by_class):
+            bad.append({"phase": phase, "framing": framing, "stage": stage, "problem": "k1_verdict %r but the classes give %r"
+                        % (overall, overall_verdict(by_class))})
+        if budget != "complete" and any(v in ("falsified", "feasible") for v in by_class.values()):
+            bad.append({"phase": phase, "framing": framing, "stage": stage,
+                        "problem": "budget_status %r (a partial margin can neither pass nor falsify) but the class verdicts are %s"
+                        % (budget, by_class)})
+        for f in framings:
+            for cls, verdict in by_class.items():
+                rows.append(K1Row(phase, "", cls, f, rec["E_ub_V"], budget or "", rec["notes"], verdict, stage=stage,
+                                  E_ub=e_ub, E_lb=e_lb, E_lb_status="sourced" if e_lb is not None else "pending",
+                                  reaction_id=rid, margin=margin, budget_status=budget, overall=overall,
+                                  benchmark_status=rec["benchmark_status"]))
+    table = K1Table(rows, path)
+    table.layout, table.skipped, table.inconsistencies, table.reactions = "v3", skipped, bad, reactions
+    return table
+
+
+def mineral_framing(mineral):
+    """The ladder framing of a mineral's phase state; None for a liquid precursor (the ladder has no such row)."""
+    return {"crystalline": "crystalline", "amorphous": "amorphous"}.get(mineral.phase_state)
+
+
+def k1_for(table, mineral, framing=None):
+    """K1 record of a mineral from the ladder: verdicts per cutoff class, the bracket of each row, the classes it
+    passes at. ``framing`` overrides the mineral's (the route products read both framings)."""
+    phase = mineral.k1_phase or mineral.name
+    framing = framing or mineral_framing(mineral)
+    verdicts = table.verdicts(phase, framing) if framing else {}
+    passing = [c for c, v in verdicts.items() if v == "feasible"]
+    brackets = {c: dict(table.row(phase, c, framing).bracket(), stage=table.row(phase, c, framing).stage)
+                for c in verdicts}
+    note = None
+    if not verdicts:
+        note = "no K1 row for phase %r, framing %r: K1 undetermined" % (phase, framing)
+    return {"phase": phase, "framing": framing, "by_class": verdicts, "passes_at": passing, "bracket": brackets,
+            "source": table.path, "note": note,
+            "label": "tier 1 read from the ladder file; not recomputed"}
+
+
+def proceeds(k1, override=False):
+    """Does the phase go on to K3 and K4?
+
+    It proceeds unless its K1 verdict is falsified at EVERY specified cutoff class. Inconclusive, undetermined or
+    no K1 row at all (undetermined) at any class: it proceeds, with the per-class K1 status printed in its row.
+    Proceeding is not passing. ``override`` (dry runs only, recorded) forces a phase falsified at every class through;
+    the rule itself already lets an unresolved phase proceed.
+    """
+    by = k1.get("by_class") or {}
+    status = dict(by)
+    if by and all(v == "falsified" for v in by.values()):
+        if override:
+            return {"proceeds": True, "classes": [], "overridden": True, "k1_status": status,
+                    "note": "K1 gate overridden: dry run only, never reported"}
+        return {"proceeds": False, "classes": [], "overridden": False, "k1_status": status,
+                "note": "K1 falsified at every specified cutoff class: K3 and K4 are not run"}
+    classes = [c for c, v in by.items() if v != "falsified"]
+    note = "K1 not falsified at every class: proceeds (proceeding is not passing; K1 keeps its verdict)"
+    if not by:
+        note = "no K1 row (undetermined): proceeds; K1 shown as undetermined"
+    return {"proceeds": True, "classes": classes, "overridden": False, "k1_status": status, "note": note}
+
+
+# ------------------------------------------------------------------ samples
+def samples(outputs):
+    """Decision samples of one (dose, state) from the chain outputs {link: {quantity: array}}."""
+    s = {}
+    nuc = outputs.get("nucleate") or {}
+    for q in ("Omega_bulk", "f_theta", "cos_theta", "barrier_hom_bulk_kT", "barrier_het_template_kT", "B_acc_kT",
+              "N_nuc", "S_spread", "gamma_sl_insitu", "Pi_ads", "gamma_sl_floor", "r_ads", "gamma_sl_minus_nl",
+              "branch_favourable"):
+        if q in nuc:
+            s[q] = np.asarray(nuc[q], dtype=float)
+    if "Omega_bulk" not in s and "Omega_bulk" in (outputs.get("speciation") or {}):
+        s["Omega_bulk"] = np.asarray(outputs["speciation"]["Omega_bulk"], dtype=float)
+    return s
+
+
+def _mass(good):
+    m = decision.mass_of(good)
+    return m, decision.half_width(m["P_good"], m["n_used"])
+
+
+def _verdict_record(good, p, **extra):
+    m, hw = _mass(good)
+    return {**m, "half_width": hw, "verdict": decision.verdict_from_mass(m["P_good"], p), **extra}
+
+
+def _worst_over_states(per_state):
+    return decision.worst([r["verdict"] for r in per_state.values()])
+
+
+# ------------------------------------------------------------------ K2
+def k2_at_dose(states, p_cred):
+    """K2 at one dose: Omega_bulk >= 1 at every specified state (a pass needs every state; a falsification stands).
+
+    states: {state: {"Omega_bulk": draws}} sharing their draws.
+    """
+    per = {}
+    for sid, s in states.items():
+        if "Omega_bulk" not in s:
+            continue
+        good = decision.indicator(s["Omega_bulk"], ">=", 1.0)
+        per[sid] = _verdict_record(good, p_cred, _good=good)
+    if not per:
+        return None
+    joint = np.vstack([r["_good"] for r in per.values()])
+    both = np.where(np.all(np.isfinite(joint), axis=0), np.min(joint, axis=0), np.nan)
+    j = _verdict_record(both, p_cred)
+    verdict = j["verdict"]
+    if any(r["verdict"] == "falsified" for r in per.values()):
+        verdict = "falsified"
+    elif verdict == "feasible" and not all(r["verdict"] == "feasible" for r in per.values()):
+        verdict = "inconclusive"
+    return {"verdict": verdict, "P_good": j["P_good"], "P_bad": j["P_bad"], "joint": j,
+            "by_state": decision.public(per)}
+
+
+def k2(states_by_dose, p_cred, controls=None):
+    """K2 over the dose axis: Omega_bulk >= 1 (insoluble at the processing state), from sourced K_sp and speciation.
+
+    The dose window of K2 is the set of doses where Omega_bulk >= 1. feasible: some dose
+    is feasible; falsified: every dose is falsified; inconclusive otherwise. controls: optional
+    {"undersaturated": draws, "supersaturated": draws}: the first must report dissolution and the second stability,
+    else K2 is inconclusive.
+    """
+    points = {d: r for d, r in ((d, k2_at_dose(st, p_cred)) for d, st in states_by_dose.items()) if r is not None}
+    if not points:
+        return {"verdict": "inconclusive", "gap": "no state supplies Omega_bulk", "points": {}}
+    sets = {v: sorted(d for d, r in points.items() if r["verdict"] == v) for v in decision.ORDER}
+    if sets["feasible"]:
+        verdict = "feasible"
+    elif len(sets["falsified"]) == len(points):
+        verdict = "falsified"
+    else:
+        verdict = "inconclusive"
+    ctl = {}
+    for k, vals in (controls or {}).items():
+        rec = _verdict_record(decision.indicator(vals, ">=", 1.0), p_cred)
+        ctl[k] = dict(rec, must=decision.CONTROL_MUST[k], fails_where_it_must=rec["verdict"] == decision.CONTROL_MUST[k])
+    notes = []
+    if controls is not None and not (set(decision.CONTROL_MUST) <= set(ctl) and all(c["fails_where_it_must"] for c in ctl.values())):
+        verdict = "inconclusive"
+        notes.append("falsifiability controls did not come out as they must: K2 is inconclusive")
+    return {"verdict": verdict, "quantity": "Omega_bulk", "comparator": ">=", "edge": 1.0,
+            "window": sets["feasible"], "falsified_doses": sets["falsified"], "inconclusive_doses": sets["inconclusive"],
+            "points": {str(d): {k: v for k, v in r.items()} for d, r in points.items()},
+            "controls": ctl or None, "notes": notes,
+            "rule": "worst specified state, per dose; Omega_bulk of specification v5"}
+
+
+# ------------------------------------------------------------------ admissibility on K3 and K4
+def _admissible(states, p_cred, enabled):
+    """(restricted states, record) under the admissibility rule; (states, None) when the rule is off or gamma_sl is absent."""
+    if not enabled:
+        return states, None
+    m = admissibility.mask(states)
+    if m is None:
+        return states, None
+    return admissibility.restrict(states, m), admissibility.summary(states, m, p_cred)
+
+
+def _label_inadmissible(rec, adm):
+    if adm is not None and adm["inadmissible_inputs"] and rec["verdict"] != "inconclusive":
+        rec["verdict_restricted"] = rec["verdict"]
+        rec["verdict"] = "inconclusive"
+        rec["notes"] = list(rec.get("notes", [])) + ["inadmissible inputs: 1 - M_adm >= p_cred"]
+    return rec
+
+
+# ------------------------------------------------------------------ K3
+def _k3_good(s, m_cos):
+    """Per-draw K3 indicator at one (dose, state): het meets the criterion, hom does not, and C3a."""
+    om, het, hom, b, cos = (s[k] for k in ("Omega_bulk", "barrier_het_template_kT", "barrier_hom_bulk_kT",
+                                           "B_acc_kT", "cos_theta"))
+    used = np.isfinite(om) & np.isfinite(b) & np.isfinite(cos)
+    sup = om > 1.0
+    with np.errstate(invalid="ignore"):
+        ok = sup & (het <= b) & (hom > b) & (cos >= m_cos)
+    return np.where(used, ok.astype(float), np.nan)
+
+
+def k3_at_dose(states, p_cred, m_cos):
+    """K3 at one dose: the band mass per state, the worst state, and the competing bulk precipitation."""
+    per = {}
+    for sid, s in states.items():
+        need = {"Omega_bulk", "barrier_het_template_kT", "barrier_hom_bulk_kT", "B_acc_kT", "cos_theta"}
+        if not need <= set(s):
+            continue
+        good = _k3_good(s, m_cos)
+        hom, b = s["barrier_hom_bulk_kT"], s["B_acc_kT"]
+        with np.errstate(invalid="ignore"):
+            bulk = np.where(np.isfinite(s["Omega_bulk"]) & np.isfinite(b), (hom <= b).astype(float), np.nan)
+        per[sid] = _verdict_record(good, p_cred, notes=[], P_bulk_precipitation=decision.mass_of(bulk)["P_good"],
+                                   P_het_meets=decision.mass_of(_mask_nan(s, "barrier_het_template_kT", "<=", "B_acc_kT"))["P_good"],
+                                   _good=good)
+    if not per:
+        return None
+    return {"verdict": _worst_over_states(per), "by_state": per}
+
+
+def _mask_nan(s, left, cmp_, right):
+    a, b = s[left], s[right]
+    with np.errstate(invalid="ignore"):
+        return np.where(np.isfinite(a) & np.isfinite(b), decision.COMPARATORS[cmp_](a, b).astype(float), np.nan)
+
+
+def k3(states_by_dose, p_cred, m_cos, admissible=True, competing=None):
+    """K3 over the dose axis: the accessible window W_3 along D.
+
+    states_by_dose: {ln D: {state: samples}} (dose scaled at fixed ratio, shared draws). feasible: some dose has
+    P_good >= p_cred (the window is the set of feasible doses); falsified: every dose has P_bad >= p_cred;
+    inconclusive otherwise. The dose where bulk precipitation takes over (P(DG_hom <= B_acc) >= 1/2) is stated.
+    competing: optional {phase: {ln D: Omega draws}} of competing phases (Li3PO4, AlPO4, other calcium
+    phosphates); their saturation at doses inside W_3 is reported. Prior masses are never findings.
+    """
+    points, adm_by_dose = {}, {}
+    for d, states in states_by_dose.items():
+        restricted, adm = _admissible(states, p_cred, admissible)
+        r = k3_at_dose(restricted, p_cred, m_cos)
+        u = k3_at_dose(states, p_cred, m_cos)
+        if r is None:
+            continue
+        rec = _label_inadmissible({"verdict": r["verdict"], "notes": [], "by_state": decision.public(r["by_state"]),
+                                   "unrestricted_verdict": u["verdict"] if u else None,
+                                   "P_good": _min_good(r["by_state"]), "P_bad": _max_bad(r["by_state"]),
+                                   "P_bulk_precipitation": _max_key(r["by_state"], "P_bulk_precipitation")}, adm)
+        points[d] = rec
+        adm_by_dose[d] = adm
+    if not points:
+        return {"verdict": "inconclusive", "gap": "K3 inputs are not evaluable (needs Omega, both barriers, B_acc)",
+                "points": {}}
+    sets = {v: sorted(d for d, r in points.items() if r["verdict"] == v) for v in decision.ORDER}
+    if sets["feasible"]:
+        verdict = "feasible"
+    elif len(sets["falsified"]) == len(points):
+        verdict = "falsified"
+    else:
+        verdict = "inconclusive"
+    closes = [d for d, r in sorted(points.items()) if r["P_bulk_precipitation"] is not None and r["P_bulk_precipitation"] >= 0.5]
+    window = sets["feasible"]
+    comp = None
+    if competing:
+        comp = {ph: {str(d): _comp_mass(arrs.get(d)) for d in window or list(points)} for ph, arrs in competing.items()}
+    ref = (window[0] if window else max(points, key=lambda d: points[d]["P_good"] or 0.0))
+    return {"verdict": verdict, "window": window, "falsified_doses": sets["falsified"],
+            "inconclusive_doses": sets["inconclusive"], "bulk_precipitation_takes_over_at": closes[0] if closes else None,
+            "competing_phases": comp if comp else {"note": "none specified: no K_sp for Li3PO4, AlPO4 or another calcium phosphate"},
+            "reference_dose": ref, "falsified_mass": points[ref]["P_bad"], "points": {str(d): r for d, r in points.items()},
+            "admissibility": {str(d): _adm_brief(a) for d, a in adm_by_dose.items()},
+            "rule": "DG_het <= B_acc < DG_hom and cos(theta) >= m_cos, inside K2"}
+
+
+def _comp_mass(arr):
+    if arr is None:
+        return None
+    return decision.mass_of(decision.indicator(arr, ">=", 1.0))["P_good"]
+
+
+def _min_good(per):
+    v = [r["P_good"] for r in per.values() if r["P_good"] is not None]
+    return min(v) if v else None
+
+
+def _max_bad(per):
+    v = [r["P_bad"] for r in per.values() if r["P_bad"] is not None]
+    return max(v) if v else None
+
+
+def _max_key(per, key):
+    v = [r[key] for r in per.values() if r.get(key) is not None]
+    return max(v) if v else None
+
+
+def _adm_brief(adm):
+    if adm is None:
+        return None
+    return {k: adm[k] for k in ("M_adm", "n_evaluable", "n_refused", "inadmissible_inputs", "label", "note")}
+
+
+# ------------------------------------------------------------------ K4
+def closure_edge(cos_theta, d_max):
+    """N_s_closure = tan^2(theta/2)/(2 d_max^2) per draw (thresholds C4s edge); 0 at theta = 0, huge at theta = pi."""
+    c = np.clip(np.asarray(cos_theta, dtype=float), -1.0, 1.0)
+    theta = np.arccos(c)
+    with np.errstate(invalid="ignore"):
+        return np.tan(theta / 2.0) ** 2 / (2.0 * np.asarray(d_max, dtype=float) ** 2)
+
+
+def k4_at_dose(states, p_cred, m_S, d_max):
+    per = {}
+    for sid, s in states.items():
+        if "S_spread" not in s:
+            continue
+        spread = decision.indicator(s["S_spread"], ">=", m_S)
+        closure = np.full(spread.shape, np.nan)
+        if d_max is not None and {"N_nuc", "cos_theta"} <= set(s):
+            closure = decision.indicator(s["N_nuc"], ">=", closure_edge(s["cos_theta"], d_max))
+        route = np.where(np.isfinite(spread), np.where(np.isfinite(closure), np.maximum(spread, closure), spread), np.nan)
+        rec = _verdict_record(route, p_cred, P_spread=decision.mass_of(spread)["P_good"],
+                              P_closure=decision.mass_of(closure)["P_good"], notes=[])
+        if d_max is None:
+            rec["notes"].append("closure route not evaluated: no insulating-thickness bound d_max supplied; "
+                                "a falsification cannot be stated (both routes must fail)")
+            if rec["verdict"] == "falsified":
+                rec["verdict"] = "inconclusive"
+        rec["P_both_fail"] = decision.mass_of(route)["P_bad"]
+        per[sid] = rec
+    if not per:
+        return None
+    return {"verdict": _worst_over_states(per), "by_state": per}
+
+
+def k4(states_by_dose, p_cred, m_S, d_max, admissible=True):
+    """K4 over the dose axis: S_spread >= m_S OR credible closure; falsified only if both fail on the same draw.
+
+    A pass through closure is optimistic (square-lattice, no exclusion zones) and labelled.
+    """
+    points, adm_by_dose = {}, {}
+    for d, states in states_by_dose.items():
+        restricted, adm = _admissible(states, p_cred, admissible)
+        r = k4_at_dose(restricted, p_cred, m_S, d_max)
+        u = k4_at_dose(states, p_cred, m_S, d_max)
+        if r is None:
+            continue
+        rec = _label_inadmissible({"verdict": r["verdict"], "notes": [], "by_state": r["by_state"],
+                                   "unrestricted_verdict": u["verdict"] if u else None,
+                                   "P_good": _min_good(r["by_state"]), "P_bad": _max_key(r["by_state"], "P_both_fail")}, adm)
+        points[d] = rec
+        adm_by_dose[d] = adm
+    if not points:
+        return {"verdict": "inconclusive", "gap": "K4 inputs are not evaluable (needs S_spread)", "points": {}}
+    sets = {v: sorted(d for d, r in points.items() if r["verdict"] == v) for v in decision.ORDER}
+    if sets["feasible"]:
+        verdict = "feasible"
+    elif len(sets["falsified"]) == len(points):
+        verdict = "falsified"
+    else:
+        verdict = "inconclusive"
+    ref = sets["feasible"][0] if sets["feasible"] else max(points, key=lambda d: points[d]["P_good"] or 0.0)
+    via = None
+    if verdict == "feasible":
+        st = points[ref]["by_state"]
+        via = "closure only (optimistic)" if all(r["P_spread"] is not None and r["P_spread"] < p_cred for r in st.values()) \
+            else "S_spread"
+    return {"verdict": verdict, "feasible_doses": sets["feasible"], "falsified_doses": sets["falsified"],
+            "inconclusive_doses": sets["inconclusive"], "reference_dose": ref, "falsified_mass": points[ref]["P_bad"],
+            "route": via, "d_max": None if d_max is None else float(np.max(d_max)),
+            "points": {str(d): r for d, r in points.items()},
+            "admissibility": {str(d): _adm_brief(a) for d, a in adm_by_dose.items()},
+            "rule": "S_spread >= m_S OR N_nuc >= N_s_closure(theta, d_max)"}
+
+
+# ------------------------------------------------------------------ deletion test and framing rule
+def deletion_test(template, control, p_deg):
+    """Deletion test on K3 and K4: each must degrade without the template for the pass to count as template-specific.
+
+    template, control: {"K3": record, "K4": record} at the reference dose. A K that is not feasible with the template
+    has nothing to delete. A feasible K that does not degrade is labelled ``generic``. The test holds if at least one
+    of K3, K4 degrades (the rule of biomin_screen.screen.decision.deletion_test).
+    """
+    per, degraded = {}, []
+    for k in ("K3", "K4"):
+        t, c = template.get(k), (control or {}).get(k)
+        if t is None or c is None:
+            per[k] = {"degraded": False, "label": "not run", "note": "no template or control record"}
+            continue
+        worse = decision.ORDER.index(c["verdict"]) > decision.ORDER.index(t["verdict"])
+        mt, mc = t.get("falsified_mass"), c.get("falsified_mass")
+        more = mt is not None and mc is not None and mc - mt >= p_deg
+        deg = bool(worse or more)
+        label = None
+        if t["verdict"] == "feasible":
+            label = "template-specific" if deg else "generic"
+        per[k] = {"degraded": deg, "template_verdict": t["verdict"], "control_verdict": c["verdict"],
+                  "template_falsified_mass": mt, "control_falsified_mass": mc, "label": label}
+        if deg:
+            degraded.append(k)
+    return {"holds": bool(degraded), "degraded": degraded, "p_deg": p_deg, "per": per,
+            "applies_to": ["K3", "K4"], "note": "K1 and K2 do not depend on the template"}
+
+
+def framing_rule(by_framing):
+    """A phase is falsified only if falsified under every specified framing; feasible under at least one (named)."""
+    return decision.combine_framings(by_framing)
+
+
+# ------------------------------------------------------------------ the phase record
+def evaluate_mineral(mineral, k1_table, doses, p, controls=None, control_doses=None, d_max=None,
+                     k1_override=False, competing=None, omega_controls=None):
+    """K1 to K4 and the deletion test for one mineral (one framing).
+
+    doses: {ln D: {state: samples}} of the template run; control_doses: the same for the bare-oxide control.
+    Routes outside the solid-like nucleus are reported as pending extension points, never evaluated.
+    """
+    k1 = k1_for(k1_table, mineral)
+    gate = proceeds(k1, k1_override)
+    rec = {"mineral": mineral.describe(), "K1": k1, "gate": gate, "route_evaluators": routes.pending_for(mineral),
+           "provisional": True}
+    rec["K2"] = k2(doses, p["p_cred"], omega_controls)
+    if mineral.phase_state == "liquid_precursor":
+        rec["K3"] = rec["K4"] = {"verdict": "not applicable",
+                                 "note": "liquid precursor: K3 and K4 are the route forms of biomin_screen.screen.routes "
+                                         "(formation_accessibility, liquid_precursor_wetting), assembled by stage_rows"}
+        rec["deletion_test"] = None
+        return rec
+    if not gate["proceeds"]:
+        rec["K3"] = rec["K4"] = {"verdict": "not run", "note": gate["note"]}
+        rec["deletion_test"] = None
+        return rec
+    rec["K3"] = k3(doses, p["p_cred"], p["m_cos"], p.get("admissible", True), competing)
+    rec["K4"] = k4(doses, p["p_cred"], p["m_S"], d_max, p.get("admissible", True))
+    if control_doses:
+        c3 = k3(control_doses, p["p_cred"], p["m_cos"], p.get("admissible", True), None)
+        c4 = k4(control_doses, p["p_cred"], p["m_S"], d_max, p.get("admissible", True))
+        rec["control"] = {"K3": {k: c3[k] for k in ("verdict", "falsified_mass", "window")},
+                          "K4": {k: c4[k] for k in ("verdict", "falsified_mass", "feasible_doses")}}
+        rec["deletion_test"] = deletion_test({"K3": rec["K3"], "K4": rec["K4"]}, {"K3": c3, "K4": c4}, p["p_deg"])
+    else:
+        rec["deletion_test"] = {"holds": False, "note": "no bare-oxide control supplied: the deletion test is not run"}
+    return rec

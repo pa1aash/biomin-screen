@@ -1,0 +1,2726 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "biomin-screen/screen/results/v2",
+  "title": "Screen and stability results summary",
+  "description": "Results document of the screen. Two sections, either or both present. 'regimes' (the parameter screen): per regime, the Monte Carlo propagation of the priors through each link of the chain (anchor, sequester, nucleate), quantiles of every propagated quantity, Sobol first- and total-order indices with confidence intervals, optional dependent-input (Shapley) indices, the cos(theta) boundary mass and the threshold evaluation (null until thresholds are fixed). 'stability' (C5, deterministic): R-slurry Pourbaix domains on a (pH, E vs SHE) grid with phase identities and per-phase decomposition energies, for the bulk and the enriched state; R-cell a one-dimensional window vs Li+/Li with reduction and oxidation limits per phase, each limit carrying status ok or undetermined, and the oxidation-sink assumption. An undetermined limit is never a pass. Version history of the schema: v1 holds the screen only; v2 adds 'stability', 'boundary_mass' (required in v2 screen regimes), dependence metadata, Shapley indices, 'required_precision' and 'extensions'. A v1 document remains valid under this schema. Schema v3 adds the speciation link and its refused-draw counts; the Fig 5 barrier prefactor per regime; the Fig 7 water-stability lines of the Pourbaix regime; the decision records (C5 dose window with its falsifiability control, the R-cell scheme table and cutoff axis, per-termination verdicts, per-design-point and per-framing verdicts, the prior set and whether a verdict may be stated as a finding). Schema v5 adds 'stage_rows': the rows of the phosphate screen, one per film and stage (slurry: K2, K2h, K3, K4; cell: K1; conversion: the process thresholds of one precursor-to-cell step). Rows that share a film_id form one film; K1 of a condensed phase and K2 to K4 of an orthophosphate are never one row.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mock",
+    "generated_utc",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "description": "'5': the phosphate results rows 'stage_rows' with the STAGE field, framing, the K1 bracket (E_ub, E_lb, 'pending' while unsourced), the evidence grade of every route test and the retained prior mass (specification v6, route layer); '4': specification v4 and the admissibility rule with the retained prior mass M_adm; '3': specification v3 and the decision records; '2': the screen with stability; '1' documents keep the v1 rules (no stability section, no boundary mass)."
+    },
+    "mock": {
+      "type": "boolean",
+      "description": "True when the run used mock priors. A mock summary is never reported."
+    },
+    "generated_utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "regimes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "enum": [
+          "R-slurry",
+          "R-cell"
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/regime"
+      },
+      "description": "Parameter screen, per regime."
+    },
+    "stability": {
+      "$ref": "#/$defs/stability"
+    },
+    "required_precision": {
+      "$ref": "#/$defs/required_precision"
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(params|retro|thresholds|screen|pourbaix)$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      },
+      "description": "Package-specific metadata that is not part of the shared contract (for example the Pourbaix package's resolved inputs), keyed by producer id. Nothing in it is read by another producer."
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/claim"
+      },
+      "description": "Link verdicts under the fixed thresholds (configs/thresholds.yaml), C1 to C5.",
+      "propertyNames": {
+        "enum": [
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5"
+        ]
+      }
+    },
+    "study": {
+      "$ref": "#/$defs/study"
+    },
+    "stage_rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/ph_row"
+      },
+      "description": "rows of the phosphate screen; see $defs.ph_row"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "git_sha",
+        "git_dirty",
+        "config_hash"
+      ],
+      "properties": {
+        "git_sha": {
+          "type": "string",
+          "description": "Code version of the run: biomin_screen.__version__ (documents written by older code carry a 40-character commit id).",
+          "minLength": 1
+        },
+        "git_dirty": {
+          "type": "boolean",
+          "description": "False for the shipped code; True only when the working tree had uncommitted changes at run time."
+        },
+        "config_hash": {
+          "$ref": "#/$defs/sha256",
+          "description": "sha256 of the canonical JSON of the run configuration (sorted keys, no whitespace)."
+        },
+        "prior_file": {
+          "type": "string",
+          "description": "Repository-relative path of the prior file (screen documents)."
+        },
+        "prior_file_hash": {
+          "$ref": "#/$defs/sha256",
+          "description": "sha256 of the raw bytes of the prior file."
+        },
+        "contract_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Version identifier of the contract the physics was checked against, or null."
+        },
+        "config_file": {
+          "type": "string",
+          "description": "Repository-relative path of the run configuration file, when there is one."
+        },
+        "config_file_hash": {
+          "$ref": "#/$defs/sha256",
+          "description": "sha256 of the raw bytes of the run configuration file."
+        },
+        "params_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Identifier of the version of data/params.yaml the priors were read from, or null for mock priors."
+        },
+        "thresholds_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Repository-relative path of the thresholds file, or null when none is fixed."
+        },
+        "thresholds_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "sha256 of the raw bytes of configs/thresholds.yaml, or null when none is fixed."
+        },
+        "thresholds_source_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Identifier of the version of data/thresholds.md the thresholds were copied from."
+        },
+        "schema_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Identifier of the version of this schema the document was written against."
+        },
+        "gap_table_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Gap-resolution table read by the run."
+        },
+        "gap_table_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Identifier of the version of the gap-resolution table the run read."
+        },
+        "gap_table_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "params_tag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Label of the fixed parameter table."
+        },
+        "params_sha_at_tag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Identifier of the version of data/params.yaml that carries the label."
+        },
+        "overrides": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Sweep overrides of specified conventions or bindings (labelled; never the primary result)."
+        },
+        "run_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "admissibility_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The specified admissibility rule the run applied; null when the rule is not applied."
+        },
+        "thresholds_block_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Version of the thresholds block of data/thresholds.md the copy holds."
+        },
+        "thresholds_block_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "sha256 of the thresholds block text."
+        },
+        "symbol_bindings_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Repository-relative path of the symbol-binding table."
+        },
+        "symbol_bindings_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "sha256 of the raw bytes of the symbol-binding table."
+        },
+        "symbol_bindings_header_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Header hash of the symbol-binding table: the sha256 of the file with the hash line removed."
+        },
+        "gap_table_hashes": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          },
+          "description": "sha256 of each gap-resolution table read (carbonate and phosphate)."
+        },
+        "ladder_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Repository-relative path of the K1 ladder read."
+        },
+        "ladder_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "sha256 of the K1 ladder file."
+        }
+      },
+      "description": "Run provenance. A screen document also requires prior_file and prior_file_hash."
+    },
+    "regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draws",
+        "seed",
+        "sobol_design",
+        "links"
+      ],
+      "properties": {
+        "draws": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Monte Carlo draws used for the quantiles."
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Root seed of the regime's random stream."
+        },
+        "sobol_design": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "base_samples",
+            "evaluations",
+            "bootstrap_resamples",
+            "confidence_level"
+          ],
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "base_samples": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "evaluations": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "bootstrap_resamples": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "confidence_level": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            }
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of the sampled inputs, in the order used by the Sobol design."
+        },
+        "links": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "enum": [
+              "anchor",
+              "speciation",
+              "sequester",
+              "nucleate"
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/link"
+          }
+        },
+        "boundary_mass": {
+          "type": "object",
+          "description": "cos(theta) boundary mass, keyed by link then by the quantity whose Young ratio was clipped (for example nucleate.cos_theta). Draws with a Young ratio above 1 are placed at theta = 0 (f = 0), below -1 at theta = 180 deg (f = 1); the counts make a verdict carried by clipped mass visible. Empty object per link when no Young ratio is evaluated. An empty object when no link of the regime evaluates a Young ratio.",
+          "propertyNames": {
+            "enum": [
+              "anchor",
+              "sequester",
+              "nucleate"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/boundary_mass"
+            }
+          }
+        },
+        "dependence": {
+          "$ref": "#/$defs/dependence"
+        },
+        "dependence_check": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Robustness of the ranking to the correlation assumption: the same indices recomputed under independence, with the rank agreement. Reported as a check in production; null when not run.",
+          "additionalProperties": false,
+          "required": [
+            "alternative",
+            "rank_agreement"
+          ],
+          "properties": {
+            "alternative": {
+              "enum": [
+                "independent",
+                "stated_correlations"
+              ]
+            },
+            "rank_agreement": {
+              "type": "object",
+              "description": "Keyed by link then quantity: Kendall tau between the two rankings of the parameters, and whether the top-ranked parameter is the same.",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kendall_tau",
+                    "same_top"
+                  ],
+                  "properties": {
+                    "kendall_tau": {
+                      "type": "number",
+                      "minimum": -1,
+                      "maximum": 1
+                    },
+                    "same_top": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "convergence": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "target_ci_half_width",
+            "base_samples",
+            "base_samples_doubled",
+            "max_ci_half_width",
+            "max_estimate_shift",
+            "converged"
+          ],
+          "description": "Sobol convergence: the target CI half-width stated before sizing, the achieved maximum half-width, and the largest change of any index when the base sample size is doubled.",
+          "properties": {
+            "target_ci_half_width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "base_samples": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "base_samples_doubled": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "max_ci_half_width": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max_estimate_shift": {
+              "type": "number",
+              "minimum": 0
+            },
+            "converged": {
+              "type": "boolean"
+            },
+            "capped": {
+              "type": "boolean",
+              "description": "True when the size the target needs exceeded the configured maximum and the run used the maximum instead; the shortfall shows in max_ci_half_width."
+            },
+            "target_scope": {
+              "type": "string",
+              "description": "Indices the half-width target applies to (all, or top_total:k: the total-order indices of the top k inputs per quantity)."
+            }
+          }
+        },
+        "primary_state": {
+          "type": "string",
+          "description": "Specified state that received the full sensitivity analysis."
+        },
+        "unsampled": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Inputs of the primary state without a samplable prior, with the table's reason."
+        },
+        "states": {
+          "type": "object",
+          "description": "Other specified states of the regime: propagated quantities, boundary mass and unsampled inputs (they enter the decision rule; worst_state and path_sum).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "quantities",
+              "boundary_mass"
+            ],
+            "properties": {
+              "quantities": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/quantity"
+                  }
+                }
+              },
+              "boundary_mass": {
+                "type": "object"
+              },
+              "unsampled": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "refused": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Refused draws of the state, as the regime field.",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/refused_mass"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "prior_set": {
+          "enum": [
+            "table",
+            "ignorance",
+            "analog"
+          ],
+          "description": "Prior set of the run; a verdict under the ignorance set is never a finding."
+        },
+        "barrier_prefactor": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/barrier_prefactor"
+            }
+          ]
+        },
+        "refused": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Draws refused by a model's validity range, keyed by link then model (speciation: the Davies activity model above I_val).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/refused_mass"
+            }
+          }
+        },
+        "admissibility": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Admissibility rule in the sensitivity analysis (v4 documents): the nucleate link is analysed on the admitted draws of its state; M_adm there and the method note."
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quantities",
+        "sobol",
+        "threshold_evaluation"
+      ],
+      "properties": {
+        "quantities": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/quantity"
+          }
+        },
+        "sobol": {
+          "type": "object",
+          "description": "Keyed by quantity name, then by parameter name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/sobol_indices"
+            }
+          }
+        },
+        "threshold_evaluation": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Per-link verdict-band evaluation against the fixed thresholds; null until they are fixed."
+        },
+        "shapley": {
+          "type": "object",
+          "description": "Shapley effects (valid for dependent inputs), keyed by quantity then parameter; each normalised by Var(Y), summing to one over the parameters.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/estimate_ci"
+            }
+          }
+        },
+        "sensitivity_scale": {
+          "type": "object",
+          "description": "Per quantity, the scale its Sobol and Shapley indices are computed on: log10 for positive multiplicative quantities (saturation ratios, enrichment, concentrations, barriers, radii), linear otherwise. Quantities without an entry are reported (quantiles) without sensitivity indices.",
+          "additionalProperties": {
+            "enum": [
+              "linear",
+              "log10"
+            ]
+          }
+        },
+        "sobol_design": {
+          "$ref": "#/$defs/regime/properties/sobol_design"
+        },
+        "convergence": {
+          "$ref": "#/$defs/regime/properties/convergence"
+        },
+        "shapley_design": {
+          "type": "object",
+          "description": "Sample sizes of the Shapley estimation (n_var, n_outer, n_inner, costs estimated, evaluations, bootstrap).",
+          "additionalProperties": true
+        }
+      }
+    },
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "units",
+        "n_valid",
+        "mean",
+        "sd",
+        "quantiles"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string"
+        },
+        "units": {
+          "type": "string"
+        },
+        "n_valid": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Draws inside the physical domain (finite results)."
+        },
+        "mean": {
+          "type": "number"
+        },
+        "sd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "quantiles": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(0(\\.[0-9]+)?|1(\\.0+)?)$"
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Keyed by probability level written as a decimal string, e.g. \"0.5\"."
+        }
+      }
+    },
+    "estimate_ci": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "estimate",
+        "ci_low",
+        "ci_high"
+      ],
+      "properties": {
+        "estimate": {
+          "type": "number"
+        },
+        "ci_low": {
+          "type": "number"
+        },
+        "ci_high": {
+          "type": "number"
+        }
+      }
+    },
+    "sobol_indices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "first_order",
+        "total_order"
+      ],
+      "properties": {
+        "first_order": {
+          "$ref": "#/$defs/estimate_ci"
+        },
+        "total_order": {
+          "$ref": "#/$defs/estimate_ci"
+        }
+      }
+    },
+    "boundary_mass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_finite",
+        "n_clipped_theta_0",
+        "n_clipped_theta_180",
+        "fraction_theta_0",
+        "fraction_theta_180",
+        "fraction_total"
+      ],
+      "properties": {
+        "n_finite": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Draws with a finite Young ratio."
+        },
+        "n_clipped_theta_0": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Draws with ratio > 1, set to theta = 0 (complete spreading, f = 0)."
+        },
+        "n_clipped_theta_180": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Draws with ratio < -1, set to theta = 180 deg (no wetting, f = 1)."
+        },
+        "fraction_theta_0": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fraction_theta_180": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fraction_total": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "dependence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method"
+      ],
+      "description": "How the inputs were sampled jointly.",
+      "properties": {
+        "method": {
+          "enum": [
+            "independent",
+            "gaussian_copula"
+          ]
+        },
+        "rank_correlations": {
+          "type": "array",
+          "description": "Stated Spearman rank correlations between pairs of parameters, with their source.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "a",
+              "b",
+              "spearman_rho"
+            ],
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              },
+              "spearman_rho": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "stability": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "C5 deterministic outputs. Thermodynamic proxies only: which state is at equilibrium, not how fast anything corrodes, dissolves or decomposes.",
+      "properties": {
+        "R-slurry": {
+          "$ref": "#/$defs/pourbaix_regime"
+        },
+        "R-cell": {
+          "$ref": "#/$defs/window_regime"
+        }
+      }
+    },
+    "pourbaix_regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reference_electrode",
+        "temperature_K",
+        "axes",
+        "states"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pourbaix"
+        },
+        "reference_electrode": {
+          "const": "SHE",
+          "description": "Potentials are in V vs SHE."
+        },
+        "temperature_K": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pH",
+            "E_V"
+          ],
+          "description": "Grid axes. Every grid in this regime is indexed [i][j] at E_V[i] and pH[j].",
+          "properties": {
+            "pH": {
+              "$ref": "#/$defs/axis"
+            },
+            "E_V": {
+              "$ref": "#/$defs/axis"
+            }
+          }
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bulk",
+            "enriched"
+          ],
+          "description": "The bulk state (regime a_Ca, a_CO3) and the enriched state at the template.",
+          "properties": {
+            "bulk": {
+              "$ref": "#/$defs/pourbaix_state"
+            },
+            "enriched": {
+              "$ref": "#/$defs/pourbaix_state"
+            }
+          }
+        },
+        "water_lines": {
+          "$ref": "#/$defs/water_lines"
+        }
+      }
+    },
+    "axis": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "number"
+      },
+      "description": "Strictly increasing grid values."
+    },
+    "pourbaix_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conditions",
+        "phases",
+        "domains",
+        "decomposition_energy"
+      ],
+      "properties": {
+        "conditions": {
+          "type": "object",
+          "description": "Ion activities or concentrations, carbonate system and other inputs that define the state, each with its source.",
+          "required": [
+            "a_Ca",
+            "a_CO3"
+          ],
+          "properties": {
+            "a_Ca": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "a_CO3": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Identity of each stability domain; a domain's index in index_grid is its position here.",
+          "items": {
+            "$ref": "#/$defs/domain_identity"
+          }
+        },
+        "domains": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index_grid"
+          ],
+          "properties": {
+            "index_grid": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer",
+                  "minimum": -1
+                }
+              },
+              "description": "Domain index at (E_V[i], pH[j]); -1 where no domain is defined."
+            }
+          }
+        },
+        "decomposition_energy": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Per phase (keyed by phase name, for example calcite, ACC, corundum): energy above the Pourbaix equilibrium on the grid.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "units",
+              "grid"
+            ],
+            "properties": {
+              "units": {
+                "const": "eV/atom"
+              },
+              "material_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  }
+                }
+              },
+              "formula": {
+                "type": "string",
+                "description": "Formula of the phase (for the per non-O, non-H atom normalisation of the C5 edge)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "domain_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "label",
+        "kind",
+        "components"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "solid",
+            "aqueous",
+            "gas",
+            "mixed"
+          ],
+          "description": "mixed: the domain combines components of different kinds."
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "species",
+              "kind"
+            ],
+            "properties": {
+              "species": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "solid",
+                  "aqueous",
+                  "gas"
+                ]
+              },
+              "material_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "window_regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reference_electrode",
+        "temperature_K",
+        "sink_assumption",
+        "windows"
+      ],
+      "properties": {
+        "kind": {
+          "const": "window"
+        },
+        "reference_electrode": {
+          "const": "Li+/Li",
+          "description": "Potentials are in V vs Li+/Li."
+        },
+        "temperature_K": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "convention": {
+          "type": "string",
+          "description": "Sign convention of the limit potential (contract function E_window)."
+        },
+        "sink_assumption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "active",
+            "statement"
+          ],
+          "description": "Where the cation goes on oxidation. The Li-open window of a Li-free phase is unbounded anodically (open question Q9), so every oxidation limit is conditional on this assumption.",
+          "properties": {
+            "active": {
+              "type": "string",
+              "minLength": 1
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            },
+            "switch": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "solid_salt",
+                "solvated",
+                "other"
+              ],
+              "description": "solid_salt: the cation leaves as the solid salt of the electrolyte anion; a pass under it is conditional on the specified sink assumption."
+            }
+          }
+        },
+        "windows": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Keyed by phase name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reduction",
+              "oxidation"
+            ],
+            "properties": {
+              "material_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reduction": {
+                "$ref": "#/$defs/window_limit"
+              },
+              "oxidation": {
+                "$ref": "#/$defs/window_limit"
+              },
+              "notes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "oxidation_by_scheme": {
+                "type": "object",
+                "description": "Oxidation limit per specified gas reference scheme; the limit used is the lowest.",
+                "additionalProperties": {
+                  "$ref": "#/$defs/window_limit"
+                }
+              },
+              "reduction_by_scheme": {
+                "type": "object",
+                "description": "Reduction limit per specified gas reference scheme; the limit used is the highest.",
+                "additionalProperties": {
+                  "$ref": "#/$defs/window_limit"
+                }
+              }
+            }
+          }
+        },
+        "schemes": {
+          "type": "object",
+          "description": "Per gas-reference scheme: its role (governing: the all-experimental route; comparator: DFT schemes) and its measured benchmark error.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "enum": [
+                  "governing",
+                  "comparator"
+                ]
+              },
+              "benchmark_error_V": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "window_limit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "value_V",
+        "reaction",
+        "reason"
+      ],
+      "description": "One limit of a window. status ok carries a finite value; status undetermined carries a null value and a non-empty reason, and is never read as a pass.",
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "undetermined"
+          ]
+        },
+        "value_V": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reaction": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "delta_g_ev": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "delta_n_li": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ok"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value_V": {
+                "type": "number"
+              },
+              "reaction": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "undetermined"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value_V": {
+                "type": "null"
+              },
+              "reason": {
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "required_precision": {
+      "type": "object",
+      "description": "Required precision of each governing parameter (configs/precision_method.md), keyed by regime then parameter.",
+      "propertyNames": {
+        "enum": [
+          "R-slurry",
+          "R-cell"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "units",
+            "prior_width",
+            "required_width",
+            "width_ratio",
+            "nearest_threshold",
+            "method"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "ok",
+                "already_clears",
+                "unreachable"
+              ]
+            },
+            "units": {
+              "type": "string"
+            },
+            "prior_width": {
+              "type": "number",
+              "minimum": 0
+            },
+            "required_width": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "width_ratio": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "nearest_threshold": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "required": [
+        "verdict",
+        "tests"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "feasible",
+            "inconclusive",
+            "falsified",
+            "descriptor"
+          ],
+          "description": "'descriptor' for C2, a reported binding descriptor that never gates."
+        },
+        "tests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "verdict"
+            ],
+            "properties": {
+              "verdict": {
+                "enum": [
+                  "feasible",
+                  "inconclusive",
+                  "falsified"
+                ]
+              },
+              "P_good": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "P_bad": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "gap": {
+                "type": "string",
+                "description": "The parameter-table key or input that is missing; the test is then inconclusive."
+              },
+              "by_termination": {
+                "$ref": "#/$defs/termination_verdicts"
+              },
+              "P_good_range": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "Band mass over the simplex of termination weights (ignorance mixture)."
+              },
+              "dose_window": {
+                "$ref": "#/$defs/dose_window"
+              },
+              "control": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/omega_point"
+                  }
+                ]
+              },
+              "scheme_table": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/scheme_row"
+                }
+              },
+              "cutoff_axis": {
+                "$ref": "#/$defs/cutoff_axis"
+              },
+              "N_req": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "states_missing": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "falsified_mass": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "role": {
+          "enum": [
+            "gating",
+            "descriptor"
+          ]
+        },
+        "gap": {
+          "type": "string"
+        },
+        "finding": {
+          "type": "object",
+          "description": "C2: the sequestration premise finding."
+        },
+        "by_design": {
+          "type": "object",
+          "description": "Per design point: the framing-combined verdict, {verdict, governing_framing, by_framing}; for C2 the finding per framing."
+        },
+        "design_dependent": {
+          "type": "boolean",
+          "description": "True when the verdict differs between design points; the headline is then inconclusive."
+        },
+        "detail_point": {
+          "type": "string"
+        },
+        "detail_framing": {
+          "type": "string"
+        },
+        "prior_set": {
+          "enum": [
+            "table",
+            "ignorance",
+            "analog"
+          ]
+        },
+        "finding_eligible": {
+          "type": "boolean",
+          "description": "False when the verdict rests on an ignorance prior: never stated as a finding."
+        },
+        "dose_window": {
+          "$ref": "#/$defs/dose_window"
+        },
+        "P_gamma_sl_gt_gamma_nl": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "P(gamma_sl > gamma_nl) at every specified state (block v2, C4 report_mass).",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "rule": {
+          "type": "string"
+        },
+        "credible_level": {
+          "type": "number"
+        },
+        "omega_controls": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The Omega test's falsifiability controls (block v2): undersaturated must be falsified (dissolution), supersaturated feasible (stability).",
+          "additionalProperties": {
+            "$ref": "#/$defs/omega_point"
+          }
+        },
+        "states_missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "P_good": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "P_bad": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "half_width": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "joint_rule": {
+          "type": "string"
+        },
+        "joint_by_state": {
+          "type": "object"
+        },
+        "worst_state": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "route_masses": {
+          "type": "object"
+        },
+        "gated_phases": {
+          "type": "object"
+        },
+        "side_by_side": {
+          "type": "object",
+          "description": "Results run beside the link's decisive route under the gap table (C1: the flagged analog and the Dupre estimate under ignorance priors); labelled, never the verdict.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "terminations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Termination specification of C1 and whether the inputs resolve it."
+        },
+        "omega_sensitivities": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Labelled Omega sensitivities of C5s by design point (C5s_ACC: Omega_bulk with the ACC K_sp); never gating."
+        },
+        "admissibility": {
+          "type": "object",
+          "description": "Admissibility rule (thresholds decision.admissibility). C3 and C4: the retained prior mass M_adm (fraction of the evaluable draws with gamma_sl_insitu >= 0 at every specified state of the design point), per state, whether the inputs are inadmissible (1 - M_adm >= p_cred: verdict inconclusive), the restricted and the unrestricted verdicts (the latter a labelled sensitivity on the same draws, never a verdict), P(gamma_sl_floor >= 0) and the r_ads quantiles over the admitted draws; at the headline also over_design. C2: its quantities over the admitted draws beside the specified descriptor.",
+          "properties": {
+            "M_adm": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "inadmissible_inputs": {
+              "type": "boolean"
+            },
+            "verdict_restricted": {
+              "enum": [
+                "feasible",
+                "inconclusive",
+                "falsified"
+              ]
+            },
+            "verdict_unrestricted": {
+              "enum": [
+                "feasible",
+                "inconclusive",
+                "falsified"
+              ]
+            },
+            "by_state": {
+              "type": "object"
+            },
+            "over_design": {
+              "type": "object"
+            },
+            "unrestricted": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": true
+        },
+        "half_width_unsized": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "v4: the half-width of a restricted band mass printed but not entering the sizing rule, because the link's inputs are inadmissible under the admissibility rule."
+        }
+      },
+      "additionalProperties": false
+    },
+    "study": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "links",
+        "deletion_test"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "feasible",
+            "inconclusive",
+            "falsified"
+          ]
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "feasible",
+              "inconclusive",
+              "falsified"
+            ]
+          }
+        },
+        "deletion_test": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "framing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gating_links": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "C1",
+              "C3",
+              "C4",
+              "C5"
+            ]
+          }
+        },
+        "design_dependent": {
+          "type": "boolean"
+        },
+        "by_design": {
+          "type": "object",
+          "description": "Per design point: {verdict, governing_framing, by_framing}."
+        },
+        "framings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prior_set": {
+          "enum": [
+            "table",
+            "ignorance",
+            "analog"
+          ]
+        },
+        "finding_eligible": {
+          "type": "boolean"
+        },
+        "sequestration_premise": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gaps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "not_evaluable": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "truncation": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Truncated priors (gamma_sl0 >= 0): the removed mass, and with the untruncated sensitivity the verdicts that change."
+        },
+        "sizing": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Monte Carlo sizing rule (thresholds): draws per state, band-mass half-widths reached, capped."
+        },
+        "overrides": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "controls_specified": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Deletion-test controls as the gap table specifies them (evaluable or gap)."
+        },
+        "by_design_c5": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "C5 and the study verdict per (design point, total Al) where the competing-phase test depends on total Al."
+        },
+        "admissibility": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Admissibility rule : retained masses by design point and framing, the unrestricted study verdict on the same draws (labelled sensitivity, never a verdict) and the verdicts that differ."
+        }
+      }
+    },
+    "refused_mass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_evaluated",
+        "n_refused",
+        "fraction_refused"
+      ],
+      "properties": {
+        "n_evaluated": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "n_refused": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fraction_refused": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "barrier_prefactor": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Fig 5: Delta_G*_hom / k_B T = B_kT / ln^2(Omega), with B_kT = 16 pi gamma_nl^3 V_m^2 / (3 N_A^2 (k_B T)^3) at the stated reference inputs.",
+      "required": [
+        "reference_gamma_nl",
+        "V_m",
+        "T",
+        "B_kT"
+      ],
+      "properties": {
+        "reference_gamma_nl": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "J m^-2"
+        },
+        "V_m": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "m^3 mol^-1"
+        },
+        "T": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "K"
+        },
+        "B_kT": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reference": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "units": {
+          "type": "object"
+        }
+      }
+    },
+    "water_lines": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Fig 7: the water-stability lines on the pH axis of the regime, E_V[j] at pH[j] (V vs SHE).",
+      "required": [
+        "hydrogen",
+        "oxygen"
+      ],
+      "properties": {
+        "hydrogen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "E_V"
+          ],
+          "properties": {
+            "E_V": {
+              "$ref": "#/$defs/axis"
+            },
+            "reaction": {
+              "type": "string"
+            },
+            "p_gas_bar": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "oxygen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "E_V"
+          ],
+          "properties": {
+            "E_V": {
+              "$ref": "#/$defs/axis"
+            },
+            "reaction": {
+              "type": "string"
+            },
+            "p_gas_bar": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "source": {
+          "type": "string",
+          "description": "Where the standard potential comes from (a parameter-table key)."
+        }
+      }
+    },
+    "omega_point": {
+      "type": "object",
+      "description": "Band mass of Omega_bulk >= 1 at one design point; feasible means no dissolution.",
+      "required": [
+        "verdict"
+      ],
+      "properties": {
+        "axes": {
+          "type": "object"
+        },
+        "P_good": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "P_bad": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "half_width": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "feasible",
+            "inconclusive",
+            "falsified"
+          ]
+        },
+        "fails_where_it_must": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": "string"
+        },
+        "gap": {
+          "type": "string"
+        },
+        "must": {
+          "enum": [
+            "feasible",
+            "inconclusive",
+            "falsified"
+          ]
+        },
+        "verdict_before_control": {
+          "enum": [
+            "feasible",
+            "inconclusive",
+            "falsified"
+          ]
+        },
+        "a_Ca_median": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "a_CO3_median": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "by_state": {
+          "type": "object"
+        }
+      }
+    },
+    "dose_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feasible_points",
+        "points"
+      ],
+      "description": "the design points (Ca dose, C_T) where Omega_bulk >= 1 at the credible level.",
+      "properties": {
+        "feasible_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "points": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/omega_point"
+          }
+        },
+        "falsified_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inconclusive_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scheme_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "sink",
+        "scheme",
+        "role",
+        "status",
+        "value_V"
+      ],
+      "properties": {
+        "phase": {
+          "type": "string"
+        },
+        "sink": {
+          "type": "string"
+        },
+        "sink_kind": {
+          "enum": [
+            "solid_salt",
+            "solvated",
+            "other"
+          ]
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "governing",
+            "comparator"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "undetermined",
+            "absent"
+          ]
+        },
+        "value_V": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "benchmark_error_V": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "cutoff_axis": {
+      "type": "object",
+      "description": "the verdict as a function of the cutoff (E_cell_max by cathode class, or E_cell_min).",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bound_V",
+          "verdict"
+        ],
+        "properties": {
+          "bound_V": {
+            "type": "number"
+          },
+          "verdict": {
+            "enum": [
+              "feasible",
+              "inconclusive",
+              "falsified"
+            ]
+          },
+          "phases": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "termination_verdicts": {
+      "type": "object",
+      "description": "the verdict of each populated termination; the mixture is the ignorance mixture over the weights.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "verdict"
+        ],
+        "properties": {
+          "verdict": {
+            "enum": [
+              "feasible",
+              "inconclusive",
+              "falsified"
+            ]
+          },
+          "P_good": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "P_bad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "ph_row": {
+      "type": "object",
+      "required": [
+        "row_id",
+        "film_id",
+        "phase",
+        "stage",
+        "role",
+        "framing",
+        "labels",
+        "provisional"
+      ],
+      "properties": {
+        "row_id": {
+          "type": "string"
+        },
+        "film_id": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "slurry",
+            "cell",
+            "conversion"
+          ]
+        },
+        "role": {
+          "enum": [
+            "candidate",
+            "route",
+            "comparator",
+            "baseline",
+            "conversion"
+          ]
+        },
+        "route": {
+          "enum": [
+            "R1",
+            "R2",
+            "R3",
+            null
+          ]
+        },
+        "framing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "provisional": {
+          "type": "boolean"
+        },
+        "K1": {
+          "type": "object",
+          "required": [
+            "by_class"
+          ],
+          "properties": {
+            "by_class": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "verdict",
+                  "framings"
+                ],
+                "properties": {
+                  "verdict": {
+                    "enum": [
+                      "feasible",
+                      "falsified",
+                      "inconclusive",
+                      "undetermined",
+                      "not excluded",
+                      "not gating",
+                      "not run",
+                      "not applicable",
+                      null
+                    ]
+                  },
+                  "framings": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": [
+                        "verdict",
+                        "framing",
+                        "E_ub",
+                        "E_lb",
+                        "E_ub_status",
+                        "E_lb_status"
+                      ],
+                      "properties": {
+                        "verdict": {
+                          "enum": [
+                            "feasible",
+                            "falsified",
+                            "inconclusive",
+                            "undetermined",
+                            "not excluded",
+                            "not gating",
+                            "not run",
+                            "not applicable"
+                          ]
+                        },
+                        "framing": {
+                          "enum": [
+                            "crystalline",
+                            "amorphous"
+                          ]
+                        },
+                        "E_ub": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "E_lb": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "E_ub_status": {
+                          "enum": [
+                            "sourced",
+                            "pending"
+                          ]
+                        },
+                        "E_lb_status": {
+                          "enum": [
+                            "sourced",
+                            "pending"
+                          ]
+                        }
+                      },
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "E_lb_status": {
+                                "const": "pending"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "E_lb": {
+                                "type": "null"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "if": {
+                            "properties": {
+                              "E_ub_status": {
+                                "const": "pending"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "E_ub": {
+                                "type": "null"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "description": "K1 at one cutoff class and framing: the bracket [E_lb, E_ub] (V vs Li+/Li) read from the ladder; an unsourced end is null with status 'pending'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "K2": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "evidence"
+          ],
+          "properties": {
+            "verdict": {
+              "enum": [
+                "feasible",
+                "falsified",
+                "inconclusive",
+                "undetermined",
+                "not excluded",
+                "not gating",
+                "not run",
+                "not applicable"
+              ]
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "single-source",
+                  "sourced",
+                  "computed",
+                  "analog",
+                  "gap",
+                  "mock"
+                ]
+              },
+              "description": "evidence grade of every input the test used"
+            }
+          },
+          "description": "one K test of a row: its verdict word (the decision tables' own) and the evidence grade per input"
+        },
+        "K2h": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "evidence"
+          ],
+          "properties": {
+            "verdict": {
+              "enum": [
+                "feasible",
+                "falsified",
+                "inconclusive",
+                "undetermined",
+                "not excluded",
+                "not gating",
+                "not run",
+                "not applicable"
+              ]
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "single-source",
+                  "sourced",
+                  "computed",
+                  "analog",
+                  "gap",
+                  "mock"
+                ]
+              },
+              "description": "evidence grade of every input the test used"
+            }
+          },
+          "description": "one K test of a row: its verdict word (the decision tables' own) and the evidence grade per input"
+        },
+        "K3": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "evidence"
+          ],
+          "properties": {
+            "verdict": {
+              "enum": [
+                "feasible",
+                "falsified",
+                "inconclusive",
+                "undetermined",
+                "not excluded",
+                "not gating",
+                "not run",
+                "not applicable"
+              ]
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "single-source",
+                  "sourced",
+                  "computed",
+                  "analog",
+                  "gap",
+                  "mock"
+                ]
+              },
+              "description": "evidence grade of every input the test used"
+            }
+          },
+          "description": "one K test of a row: its verdict word (the decision tables' own) and the evidence grade per input"
+        },
+        "K4": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "evidence"
+          ],
+          "properties": {
+            "verdict": {
+              "enum": [
+                "feasible",
+                "falsified",
+                "inconclusive",
+                "undetermined",
+                "not excluded",
+                "not gating",
+                "not run",
+                "not applicable"
+              ]
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "single-source",
+                  "sourced",
+                  "computed",
+                  "analog",
+                  "gap",
+                  "mock"
+                ]
+              },
+              "description": "evidence grade of every input the test used"
+            }
+          },
+          "description": "one K test of a row: its verdict word (the decision tables' own) and the evidence grade per input"
+        },
+        "retained_mass": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "M_adm"
+          ],
+          "properties": {
+            "M_adm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "description": "retained prior mass under the admissibility rule, printed beside the verdicts that use it"
+        },
+        "status": {
+          "enum": [
+            "feasible within the baseline cure range",
+            "requires a higher temperature",
+            "undetermined"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "cell"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "K1",
+              "proceeds"
+            ],
+            "properties": {
+              "K2": false,
+              "K2h": false,
+              "K3": false,
+              "K4": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "slurry"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "K2",
+              "retained_mass"
+            ],
+            "properties": {
+              "K1": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "conversion"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "precursor",
+              "product",
+              "a_w_star",
+              "T_conv_lit",
+              "T_cure_baseline",
+              "status"
+            ],
+            "properties": {
+              "K1": false,
+              "K2": false,
+              "K2h": false,
+              "K3": false,
+              "K4": false
+            }
+          }
+        }
+      ],
+      "description": "one row of the redirected screen: slurry rows carry K2 to K4, cell rows carry K1, conversion rows carry the step thresholds and a process status"
+    }
+  },
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "required": [
+            "regimes"
+          ]
+        },
+        {
+          "required": [
+            "stability"
+          ]
+        },
+        {
+          "required": [
+            "claims"
+          ]
+        },
+        {
+          "required": [
+            "stage_rows"
+          ]
+        }
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "1"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "regimes"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "stability"
+              ]
+            },
+            {
+              "required": [
+                "required_precision"
+              ]
+            },
+            {
+              "required": [
+                "extensions"
+              ]
+            },
+            {
+              "required": [
+                "claims"
+              ]
+            },
+            {
+              "required": [
+                "study"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "2"
+          }
+        },
+        "required": [
+          "regimes"
+        ]
+      },
+      "then": {
+        "properties": {
+          "regimes": {
+            "additionalProperties": {
+              "required": [
+                "boundary_mass"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "regimes"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "required": [
+              "prior_file",
+              "prior_file_hash"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "3"
+          }
+        },
+        "required": [
+          "regimes"
+        ]
+      },
+      "then": {
+        "properties": {
+          "regimes": {
+            "additionalProperties": {
+              "required": [
+                "boundary_mass"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "stage_rows"
+        ]
+      },
+      "then": {
+        "properties": {
+          "schema_version": {
+            "const": "5"
+          }
+        }
+      }
+    }
+  ]
+}

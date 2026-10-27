@@ -1,0 +1,280 @@
+"""Read the parameter table (data/params.yaml) into the screen's joint priors.
+
+The layout and the prior-construction rule are those of data/params_README.md. This
+adapter reads that layout into biomin_screen.screen.priors.Prior objects keyed by the theory
+symbol id (the argument names of the specification functions) and couples them by the stated
+correlation groups (biomin_screen.screen.sampling.JointPrior):
+
+  * family normal, uniform, loguniform: sampled; ``transform: log10`` means the family
+    describes log10 of the quantity and the physical value is 10**y;
+  * family fixed: a constant (not sampled, no sensitivity index);
+  * family categorical or none (gaps, computed or specified inputs): not sampled; they
+    are returned as unsampled with the table's reason, and a link that needs one cannot be
+    evaluated from the table alone;
+  * units: each prior is converted from the table's ``unit`` string to the SI unit of its
+    symbol in data/symbols.yaml by biomin_screen.screen.units (a linear factor on every prior
+    parameter); an unknown unit string, or one of another dimension, is refused. A log10
+    quantity must be dimensionless;
+  * correlation groups of kind ``rank`` enter as their Spearman matrix; ``assumed
+    independent`` groups enter as the identity, and the group exists so that the screen
+    can test its sensitivity to that assumption.
+
+The loader of the literature package (biomin_screen.literature.params: load_params, validate, prior, priors, prior_set) checks
+the table against the rule; when it is importable, cross_check() compares its priors with
+this adapter's on every sampled key. Nothing here invents, widens or narrows a prior.
+"""
+import hashlib
+from dataclasses import dataclass, field
+from pathlib import Path
+
+import numpy as np
+import yaml
+
+from biomin_screen.screen import units
+from biomin_screen.screen.priors import MockPriorsRefused, Prior, PriorFileError
+from biomin_screen.screen.sampling import JointPrior
+
+PRODUCTION_PARAMS = Path("data") / "params.yaml"
+REGIMES = ("R-slurry", "R-cell")
+SAMPLED = {"normal": ("mean", "sd"), "uniform": ("low", "high"), "loguniform": ("low", "high")}
+UNSAMPLED = ("categorical", "none")
+SYMBOLS = Path(__file__).resolve().parents[3] / "data" / "symbols.yaml"
+_SI = {}
+
+
+def symbol_units(path=SYMBOLS):
+    """{symbol id: SI unit string} of data/symbols.yaml (empty when the file is absent)."""
+    key = str(path)
+    if key not in _SI:
+        p = Path(path)
+        doc = yaml.safe_load(p.read_text(encoding="utf-8")) if p.exists() else {}
+        _SI[key] = {e["id"]: str(e.get("unit", "1")) for e in (doc or {}).get("symbols", [])}
+    return _SI[key]
+
+
+def to_si(symbol, unit, transform, params, where):
+    """(SI unit, params) of a prior stated in ``unit``; UnitError names the key on refusal."""
+    try:
+        units.parse(unit)
+        if transform == "log10":
+            if units.dimension(unit) != units.dimension("1"):
+                raise units.UnitError("a log10 quantity must be dimensionless, got %r" % unit)
+            return unit, params
+        si = symbol_units().get(symbol)
+        if si is None:
+            return unit, params
+        k = units.factor(unit, si)
+    except units.UnitError as exc:
+        raise PriorFileError("%s: %s" % (where, exc)) from None
+    if params is None or k == 1.0:
+        return si, params
+    return si, {name: v * k for name, v in params.items()}
+
+
+@dataclass(frozen=True, eq=False)
+class RegimePriors:
+    """Everything the screen takes from the parameter table for one regime."""
+    regime: str
+    joint: JointPrior                      # sampled and fixed inputs, keyed by symbol
+    unsampled: dict = field(default_factory=dict)   # symbol -> reason (family none/categorical)
+    path: str = ""
+    sha256: str = ""
+    mock: bool = False
+
+
+def _family_params(prior, where):
+    fam = prior.get("family")
+    if fam in SAMPLED:
+        params = {}
+        for key in SAMPLED[fam]:
+            if key not in prior:
+                raise PriorFileError("%s: %s prior needs %r" % (where, fam, key))
+            params[key] = float(prior[key])
+        if fam in ("uniform", "loguniform") and not params["low"] < params["high"]:
+            raise PriorFileError("%s: needs low < high" % where)
+        if fam == "loguniform" and params["low"] <= 0:
+            raise PriorFileError("%s: loguniform needs low > 0" % where)
+        if fam == "normal" and not params["sd"] > 0:
+            raise PriorFileError("%s: normal needs sd > 0" % where)
+        return fam, params
+    if fam == "fixed":
+        if "value" not in prior:
+            raise PriorFileError("%s: fixed prior needs 'value'" % where)
+        return fam, {"value": float(prior["value"])}
+    if fam in UNSAMPLED:
+        return fam, None
+    raise PriorFileError("%s: unknown prior family %r" % (where, fam))
+
+
+def _in_regime(entry, regime):
+    regimes = entry.get("regimes") or []
+    return regime in regimes or "shared" in regimes
+
+
+#: Parsed tables by (path, mtime, size): a screen run reads the 13 000-line table once per design point and state, and the
+#: pure-Python YAML parse costs seconds. The parsed document is shared and is never modified by a caller.
+_TABLE_CACHE = {}
+_SAFE_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)      # libyaml parser, same resolver and constructor as SafeLoader
+
+
+def _parse_table(path):
+    st = path.stat()
+    key = (str(path.resolve()), st.st_mtime_ns, st.st_size)
+    hit = _TABLE_CACHE.get(key)
+    if hit is None:
+        raw = path.read_bytes()
+        hit = (yaml.load(raw, Loader=_SAFE_LOADER) or {}, "sha256:" + hashlib.sha256(raw).hexdigest())
+        _TABLE_CACHE.clear()
+        _TABLE_CACHE[key] = hit
+    return hit
+
+
+def read_table(path, allow_mock=False):
+    """Parse the parameter table; returns (doc, sha256). Refuses a mock table without the flag."""
+    path = Path(path)
+    doc, sha = _parse_table(path)
+    if not isinstance(doc, dict):
+        raise PriorFileError("%s: top level must be a mapping" % path)
+    mock = doc.get("mock")
+    if not isinstance(mock, bool):
+        raise PriorFileError("%s: 'mock' must be stated explicitly as true or false" % path)
+    if mock and not allow_mock:
+        raise MockPriorsRefused("%s is a mock parameter table; pass --mock (allow_mock=True) to use "
+                                "it, and never for production results" % path)
+    if not isinstance(doc.get("params"), dict) or not doc["params"]:
+        raise PriorFileError("%s: 'params' must be a non-empty mapping" % path)
+    return doc, sha
+
+
+#: Specification symbols that the parameter table records under an older symbol (a name binding, no value):
+#: specification v4 names the second catechol dissociation constant pKa2; the table key pka2_catechol carries
+#: the symbol pKa (configs/gap_resolution.yaml, binding_corrections.pKa2).
+TABLE_SYMBOL_ALIASES = {"pKa2": ("pKa",)}
+
+
+def regime_priors(path, regime, allow_mock=False, bindings=None, absent="refuse", truncate=None, extra=()):
+    """Joint prior of one regime's inputs from the parameter table at path.
+
+    Without bindings every key of the regime is read, and a symbol may appear only once.
+    With bindings ({symbol: table key}) exactly the bound keys are read: the real table
+    holds alternatives under one symbol (framings, states, competing sources), and the
+    binding says which one supplies each chain input. A bound key must exist and carry the
+    symbol it is bound to; it need not be marked for the regime (a shared key may serve).
+    With absent="gap" a bound key missing from the table is reported as unsampled (an
+    explicit gap naming the key) instead of refusing the table.
+
+    truncate: {symbol: (low, high)} in SI units, applied by inverse-CDF truncation.
+    extra: Prior objects added to the joint as independent inputs (design-axis values,
+    auxiliary uniforms of the ignorance priors); never table keys.
+    """
+    if regime not in REGIMES:
+        raise PriorFileError("unknown regime %r" % regime)
+    doc, sha = read_table(path, allow_mock)
+    priors, unsampled, group_of = [], {}, {}
+    if bindings is not None:
+        missing = sorted(k for k in bindings.values() if k not in doc["params"])
+        if missing and absent != "gap":
+            raise PriorFileError("%s: bound keys not in the table: %s" % (path, missing))
+        for sym, k in bindings.items():
+            if k not in doc["params"]:
+                unsampled[sym] = "gap: bound key %r is not in the table" % k
+        bindings = {sym: k for sym, k in bindings.items() if k in doc["params"]}
+        wrong = sorted("%s -> %s (%s)" % (sym, k, doc["params"][k].get("symbol")) for sym, k in bindings.items()
+                       if doc["params"][k].get("symbol") not in (sym,) + TABLE_SYMBOL_ALIASES.get(sym, ()))
+        if wrong:
+            raise PriorFileError("%s: binding symbol differs from the table: %s" % (path, wrong))
+        selected = [(k, doc["params"][k]) for k in dict.fromkeys(bindings.values())]
+    else:
+        selected = [(k, e) for k, e in doc["params"].items() if isinstance(e, dict) and _in_regime(e, regime)]
+    for key, entry in selected:
+        if not isinstance(entry, dict):
+            continue
+        where = "%s:params.%s" % (path, key)
+        symbol = entry.get("symbol")
+        if not isinstance(symbol, str) or not symbol:
+            raise PriorFileError("%s: 'symbol' is required" % where)
+        bound = [sym for sym, k in (bindings or {}).items() if k == key and symbol in TABLE_SYMBOL_ALIASES.get(sym, ())]
+        if bound:
+            symbol = bound[0]                     # the specification symbol of an aliased key (TABLE_SYMBOL_ALIASES)
+        prior = entry.get("prior")
+        if not isinstance(prior, dict):
+            raise PriorFileError("%s: 'prior' must be a mapping" % where)
+        fam, params = _family_params(prior, where)
+        if params is None:
+            unsampled[symbol] = "prior family %s: %s" % (fam, entry.get("range_reason") or entry.get("status", ""))
+            continue
+        if symbol in {p.symbol for p in priors}:
+            raise PriorFileError("%s: symbol %s appears twice in regime %s" % (where, symbol, regime))
+        transform = entry.get("transform", "none")
+        if transform not in ("none", "log10"):
+            raise PriorFileError("%s: transform must be none or log10" % where)
+        unit = entry.get("unit")
+        if not isinstance(unit, str):
+            raise PriorFileError("%s: 'unit' is required" % where)
+        unit, params = to_si(symbol, unit, transform, params, where)
+        cut = (truncate or {}).get(symbol)
+        priors.append(Prior(key, symbol, unit, fam, params, ",".join(entry.get("sources") or []), transform,
+                            tuple(cut) if cut and fam != "fixed" else None))
+        if entry.get("correlation_group"):
+            group_of[key] = entry["correlation_group"]
+    for p in extra:
+        if p.symbol in {q.symbol for q in priors}:
+            raise PriorFileError("%s: injected input %s duplicates a table input" % (path, p.symbol))
+        priors.append(p)
+        unsampled.pop(p.symbol, None)
+    if not priors:
+        raise PriorFileError("%s: regime %s has no sampled or fixed inputs" % (path, regime))
+    rs, pairs = _spearman(doc.get("correlation_groups") or {}, priors, group_of, path)
+    return RegimePriors(regime, JointPrior(tuple(priors), rs, tuple(pairs)), unsampled,
+                        str(path), sha, bool(doc["mock"]))
+
+
+def _spearman(groups, priors, group_of, path):
+    keys = [p.name for p in priors]
+    index = {k: i for i, k in enumerate(keys)}
+    rs = np.eye(len(keys))
+    pairs = []
+    for gid in sorted(set(group_of.values())):
+        g = groups.get(gid)
+        if not isinstance(g, dict):
+            raise PriorFileError("%s: correlation group %s is not defined" % (path, gid))
+        members = list(g.get("members") or [])
+        named = sorted(k for k, v in group_of.items() if v == gid)
+        if not set(named) <= set(members):
+            raise PriorFileError("%s: group %s does not list %s" % (path, gid, sorted(set(named) - set(members))))
+        kind = g.get("kind")
+        if kind == "assumed independent":
+            continue
+        if kind != "rank":
+            raise PriorFileError("%s: group %s kind must be 'rank' or 'assumed independent'" % (path, gid))
+        m = np.asarray(g.get("matrix"), dtype=float)
+        if m.shape != (len(members), len(members)):
+            raise PriorFileError("%s: group %s matrix must be square in member order" % (path, gid))
+        source = ",".join(g.get("sources") or [])
+        for a, ka in enumerate(members):
+            for b, kb in enumerate(members):
+                if a < b and ka in index and kb in index and m[a, b] != 0.0:
+                    rs[index[ka], index[kb]] = rs[index[kb], index[ka]] = m[a, b]
+                    pairs.append({"a": priors[index[ka]].symbol, "b": priors[index[kb]].symbol,
+                                  "spearman_rho": float(m[a, b]), "source": source or gid})
+    return rs, pairs
+
+
+def cross_check(regime_priors_obj, loader_module):
+    """Compare this adapter's priors with the literature loader (biomin_screen.literature.params) key by key.
+
+    Returns a list of discrepancy strings (empty when they agree). Used by the test suite
+    where the literature loader is available.
+    """
+    issues = []
+    rp = regime_priors_obj
+    for p in rp.joint.priors:
+        other = loader_module.prior(p.name)
+        for attr in ("distribution", "transform"):
+            if getattr(other, attr, None) != getattr(p, attr):
+                issues.append("%s: %s %r != %r" % (p.name, attr, getattr(other, attr, None), getattr(p, attr)))
+        op = getattr(other, "params", {})
+        for k, v in p.params.items():
+            if k not in op or not np.isclose(op[k], v, rtol=1e-12, atol=0):
+                issues.append("%s: parameter %s %r != %r" % (p.name, k, op.get(k), v))
+    return issues

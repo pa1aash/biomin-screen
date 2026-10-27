@@ -1,0 +1,287 @@
+# Gap-resolution skeleton of the phosphate screen. SKELETON: it lists every key the phosphate screen needs and fills the
+# treatment slot ONLY where a rule is already specified; every other key reads "pending specification". It specifies no
+# number and no prior. The carbonate table (configs/gap_resolution.yaml) is separate.
+#
+# Treatments (as in the carbonate table, biomin_screen.screen.gaps.TREATMENTS):
+#   ignorance    a bounded ignorance prior whose bounds are the expressions of data/ignorance_priors.md;
+#   analog       a flagged analog prior (a table key with role analog); verdicts that rest on it are labelled;
+#   design_axis  a design axis over a specified grid (the verdict is reported per point);
+#   unresolved   no admissible treatment exists: the test that needs the key reports a gap (inconclusive);
+#   pending specification   the slot is empty: the parameter table and the margins of the thresholds block fill it.
+# The mineral objects that read the keys are the `minerals` block of configs/screen.yaml. No value appears in this file.
+version: 2
+status: skeleton
+pending_label: pending specification
+authority: {rules: [data/ignorance_priors.md], carbonate_table: configs/gap_resolution.yaml}
+reporting:
+  ignorance_is_finding: false            # data/ignorance_priors.md
+  admissibility_label: 'conditional on admissibility (M_adm printed beside)'
+  unresolved_counts_as: inconclusive
+  k1_undetermined_never_passes: true     # K1 is read from the ladder
+  provisional_margins: configs/screen.yaml k_screen (placeholders)
+
+# ---------------------------------------------------------------- per-phase keys (K2, K3, K4)
+# One block per specified framing. Each key is read by the mineral object of the same name in screen.yaml.
+keys:
+  # hap: Ca5(PO4)3OH, crystalline apatite framing; K1 phase HAp
+  log10_ksp_hap: {symbol: K_sp, links: [K2, K3], mineral: hap, treatment: pending specification}
+  v_m_hap: {symbol: V_m, links: [K3], mineral: hap, treatment: pending specification}
+  gamma_nl_hap: {symbol: gamma_nl, links: [K3, K4], mineral: hap, treatment: pending specification}
+  gamma_nv_hap: {symbol: gamma_nv, links: [K3, K4], mineral: hap, treatment: pending specification}
+  # acp: amorphous calcium phosphate framing of the candidate HAp; K1 phase HAp
+  log10_ksp_acp: {symbol: K_sp, links: [K2, K3], mineral: acp, treatment: pending specification}
+  v_m_acp: {symbol: V_m, links: [K3], mineral: acp, treatment: pending specification}
+  gamma_nl_acp: {symbol: gamma_nl, links: [K3, K4], mineral: acp, treatment: pending specification}
+  gamma_nv_acp: {symbol: gamma_nv, links: [K3, K4], mineral: acp, treatment: pending specification}
+  # ocp: octacalcium phosphate; K1 phase OCP
+  log10_ksp_ocp: {symbol: K_sp, links: [K2, K3], mineral: ocp, treatment: pending specification}
+  v_m_ocp: {symbol: V_m, links: [K3], mineral: ocp, treatment: pending specification}
+  gamma_nl_ocp: {symbol: gamma_nl, links: [K3, K4], mineral: ocp, treatment: pending specification}
+  gamma_nv_ocp: {symbol: gamma_nv, links: [K3, K4], mineral: ocp, treatment: pending specification}
+  # btcp: beta tricalcium phosphate; K1 phase b-TCP
+  log10_ksp_btcp: {symbol: K_sp, links: [K2, K3], mineral: btcp, treatment: pending specification}
+  v_m_btcp: {symbol: V_m, links: [K3], mineral: btcp, treatment: pending specification}
+  gamma_nl_btcp: {symbol: gamma_nl, links: [K3, K4], mineral: btcp, treatment: pending specification}
+  gamma_nv_btcp: {symbol: gamma_nv, links: [K3, K4], mineral: btcp, treatment: pending specification}
+  # capp: calcium pyrophosphate; K1 phase Ca2P2O7
+  log10_ksp_capp: {symbol: K_sp, links: [K2, K3], mineral: capp, treatment: pending specification}
+  v_m_capp: {symbol: V_m, links: [K3], mineral: capp, treatment: pending specification}
+  gamma_nl_capp: {symbol: gamma_nl, links: [K3, K4], mineral: capp, treatment: pending specification}
+  gamma_nv_capp: {symbol: gamma_nv, links: [K3, K4], mineral: capp, treatment: pending specification}
+  # cameta: calcium metaphosphate (condensed-phosphate class); K1 phase Ca(PO3)2
+  log10_ksp_cameta: {symbol: K_sp, links: [K2, K3], mineral: cameta, treatment: pending specification}
+  v_m_cameta: {symbol: V_m, links: [K3], mineral: cameta, treatment: pending specification}
+  gamma_nl_cameta: {symbol: gamma_nl, links: [K3, K4], mineral: cameta, treatment: pending specification}
+  gamma_nv_cameta: {symbol: gamma_nv, links: [K3, K4], mineral: cameta, treatment: pending specification}
+  acp_hydration_n: {symbol: n_hyd, links: [K2, K3], mineral: acp, treatment: pending specification}
+  n_hyd_ocp: {symbol: n_hyd, links: [K2, K3], mineral: ocp, treatment: pending specification}
+
+# ---------------------------------------------------------------- template and nucleus inputs with a specified rule
+inputs_with_rule:
+  gamma_sn0_phosphate:
+    symbol: gamma_sn0
+    links: [K3, K4]
+    treatment: ignorance
+    prior: uniform
+    low: '0'
+    high: gamma_p + gamma_nv
+    bound_from: data/ignorance_priors.md 1a (dry work of adhesion >= 0; interface stability)
+    inputs: {gamma_p: gamma_p_pda, gamma_nv: 'per mineral: gamma_nv_<P> (pending, see keys)'}
+    per_draw: true
+  delta_gamma_w:
+    symbol: Delta_gamma_w
+    links: [K3, K4]
+    treatment: ignorance
+    value_rule: '0: the prior is placed on the total contact energy (data/ignorance_priors.md 1b)'
+  delta_s:
+    symbol: delta_s
+    links: [K3, K4]
+    treatment: ignorance
+    bound_from: data/ignorance_priors.md 4 and 4a.4 (geometric prior on [Gamma_s V_m, d_layer])
+    inputs: {d_layer: template_layer_thickness, V_m: 'per mineral: v_m_<P> (pending)'}
+  bare_oxide_control:
+    links: [K3, K4]
+    treatment: ignorance
+    gamma_sl: {prior: uniform, low: '0', high: gamma_o + gamma_w, bound_from: data/ignorance_priors.md 1c}
+    gamma_sn: {prior: uniform, low: '0', high: gamma_o + gamma_nv, bound_from: the bound rule of ignorance_priors.md 1a on the oxide-nucleus contact}
+    note: 'same control as the carbonate screen; gamma_nv per phosphate mineral pending'
+  PVDF_control:
+    links: [K3, K4]
+    treatment: unresolved
+    effect: 'no PVDF dry surface energy key: the PVDF control is not evaluable (carbonate table, controls.PVDF)'
+  competing_phases:
+    symbol: K_sp
+    links: [K3]
+    phases: [Li3PO4, AlPO4, 'other calcium phosphates']
+    treatment: unresolved
+    effect: 'no sourced K_sp in this table: the competing-phase saturation of the K3 row is reported as not evaluated'
+  gamma_nv_analog:
+    symbol: gamma_nv
+    links: [K3, K4]
+    treatment: "pending specification"
+    note: 'the ACC framing of the carbonate screen used a flagged calcite analog; whether a phosphate analog is specified is not decided'
+shared_with_carbonate:                   # keys the phosphate screen reads unchanged; their treatments are those of gap_resolution.yaml
+  - gamma_sl0_template
+  - delta_g_site
+  - pka_catechol
+  - pka2_catechol
+  - gamma_s_site_density
+  - j0_het
+  - t_proc_slurry
+  - patch_area
+  - template_layer_thickness
+  - gamma_p_pda
+  - gamma_o_alumina
+  - gamma_w
+  - debye_huckel_a
+  - davies_b
+  - davies_i_val
+  - water_density
+  - log10_k_caoh
+  - ionic_strength_slurry
+
+# ---------------------------------------------------------------- phosphate speciation (specification v5)
+speciation:
+  pka1_h3po4: {symbol: pK1_phosphoric, links: [K2, K3], treatment: pending specification}
+  pka2_h3po4: {symbol: pK2_phosphoric, links: [K2, K3], treatment: pending specification}
+  pka3_h3po4: {symbol: pK3_phosphoric, links: [K2, K3], treatment: pending specification}
+  log10_k_cahpo4_aq: {symbol: K_CaHPO4_aq, links: [K2, K3], treatment: pending specification}
+  log10_k_cah2po4: {symbol: K_CaH2PO4, links: [K2, K3], treatment: pending specification}
+  log10_k_capo4: {symbol: K_CaPO4, links: [K2, K3], treatment: pending specification}
+  pkw: {symbol: pKw, links: [K2, K3], treatment: pending specification}
+
+# ---------------------------------------------------------------- design axes (specified as axes; values are design specifications)
+design_axes:
+  p_total_slurry: {symbol: P_T, links: [K2, K3], treatment: design_axis, rule: 'the dose axis D = ln of the total dose at fixed Ca:P ratio', grid: 'screen.yaml k_screen.ln_dose_axis (provisional)'}
+  ph_slurry: {symbol: pH, links: [K2, K3], treatment: design_axis, rule: 'alkaline aqueous slurry, pH 10 to 13 primary', grid: pending specification}
+  ph_slurry_acid_adjusted: {symbol: pH, links: [K2], treatment: design_axis, rule: 'comparator state in the Al passivation window; K2 comparator row only, no K3 or K4 verdict', grid: pending specification}
+  cutoff_classes: {symbol: E_c, links: [K1], treatment: design_axis, rule: 'regimes.R-cell.parameters.cutoff_classes: C_lo, C_mid, C_hi', grid: 'read from the ladder file classes'}
+  a_w_cell: {symbol: a_w, links: [K1], treatment: design_axis, rule: 'K1 reaction curves E_r(a_w, a_OH)', grid: pending specification}
+  a_oh_range: {symbol: a_OH, links: [K1], treatment: design_axis, rule: 'K1 reaction curves E_r(a_w, a_OH)', grid: pending specification}
+  al_passivation_window: {symbol: pH, links: [K2], treatment: pending specification, rule: 'derived from the Al-O-H Pourbaix and cross-checked against the published window; both reported'}
+
+# ---------------------------------------------------------------- decision constants (screen.yaml k_screen holds provisional placeholders)
+margins:
+  p_cred: {params: thresholds.decision.credible_level, treatment: pending specification, provisional_placeholder: k_screen.p_cred}
+  p_deg: {params: thresholds.decision.degrade_mass_min, treatment: pending specification, provisional_placeholder: k_screen.p_deg}
+  m_cos: {params: thresholds.C3.margin_cos_theta, treatment: pending specification, provisional_placeholder: k_screen.m_cos}
+  m_S: {params: thresholds.C4.margin_S_spread, treatment: pending specification, provisional_placeholder: k_screen.m_S}
+  margin_service: {params: thresholds.K1.margin_service, links: [K1], treatment: pending specification}
+  margin_expt: {params: thresholds.K1.margin_expt, links: [K1], derived_in: 'block v6, generated entry margins_v6 (no specified treatment slot: the value is derived, not a parameter)'}
+  margin_dft: {params: thresholds.K1.margin_dft, links: [K1], derived_in: 'block v6, generated entry margins_v6 (not set for any phosphate row)'}
+
+# ---------------------------------------------------------------- Al-salt film ladder
+ladder:
+  log10_ksp_el_alpo4: {symbol: K_sp_el, links: [ladder_b], film: alpo4, treatment: unresolved, rule: 'unsourced in the electrolyte: undetermined, never passes'}
+  log10_ksp_el_al_pmeta3: {symbol: K_sp_el, links: [ladder_b], film: al_pmeta3, treatment: unresolved, rule: 'unsourced in the electrolyte: undetermined, never passes'}
+  log10_ksp_el_al_borate: {symbol: K_sp_el, links: [ladder_b], film: al_borate, treatment: unresolved, rule: 'unsourced in the electrolyte: undetermined, never passes'}
+  log10_ksp_el_al_oxalate: {symbol: K_sp_el, links: [ladder_b], film: al_oxalate, treatment: unresolved, rule: 'unsourced in the electrolyte: undetermined, never passes'}
+  log10_ksp_el_al2o3: {symbol: K_sp_el, links: [ladder_b], film: al2o3, treatment: unresolved, rule: 'unsourced in the electrolyte: undetermined, never passes'}
+  sigma_corr_alpo4: {symbol: sigma_corr, links: [ladder_c], film: alpo4, treatment: pending specification}
+  rho_film_alpo4: {symbol: rho_film, links: [ladder_b], film: alpo4, treatment: pending specification}
+  sigma_corr_al_pmeta3: {symbol: sigma_corr, links: [ladder_c], film: al_pmeta3, treatment: pending specification}
+  rho_film_al_pmeta3: {symbol: rho_film, links: [ladder_b], film: al_pmeta3, treatment: pending specification}
+  sigma_corr_al_borate: {symbol: sigma_corr, links: [ladder_c], film: al_borate, treatment: pending specification}
+  rho_film_al_borate: {symbol: rho_film, links: [ladder_b], film: al_borate, treatment: pending specification}
+  sigma_corr_al_oxalate: {symbol: sigma_corr, links: [ladder_c], film: al_oxalate, treatment: pending specification}
+  rho_film_al_oxalate: {symbol: rho_film, links: [ladder_b], film: al_oxalate, treatment: pending specification}
+  sigma_corr_al2o3: {symbol: sigma_corr, links: [ladder_c], film: al2o3, treatment: pending specification}
+  rho_film_al2o3: {symbol: rho_film, links: [ladder_b], film: al2o3, treatment: pending specification}
+  dv_film: {symbol: DV_film, links: [ladder_b, ladder_c], treatment: pending specification}
+  j_corr_max: {symbol: j_corr_max, links: [ladder_b, ladder_c], treatment: pending specification}
+  t_max_corr: {symbol: t_max, links: [ladder_b, ladder_c], treatment: pending specification}
+  s_tol: {symbol: s_tol, links: [ladder_b, ladder_c], treatment: pending specification}
+
+# ---------------------------------------------------------------- accounted for, no treatment needed
+specified_by_config:                    # stoichiometry is a formula fact of specification v5, specified in screen.yaml minerals
+  - nu_ca_<P>
+  - nu_x_<P>
+  - nu_y_<P>
+read_from_ladder:  # K1 is read from results/pourbaix/ladder/ladder.csv; the Pourbaix package owns these inputs
+  - dfg_<species>
+  - dfh_<species>
+  - s_<species>
+  - solvation_<ion>
+  - t_svc_min
+  - j_svc
+  - tier2_records                        # evidence rows of class A, B or C; none specified means tier 1 only
+read_from_ladder_k1:  # K1 bracket and the glass framing: computed by the Pourbaix package, the screen reads
+  - hydration_free_energy_<ion>
+  - hydration_transfer_<ion>_water_carbonate
+  - hydration_transfer_salt_<salt>_water_carbonate
+  - transfer_free_energy_li_water_pc
+  - glass_dfh_<P>_glass
+  - glass_dfh_<P>_crystal
+  - glass_s0_<P>_glass
+  - glass_crystal_correction_lipo3
+  - glass_crystal_correction_napo3
+  - polyp_al_log_k_oxide                 # K_ox,Al of the oxide-equilibrium a(Al3+); Al-O-H Pourbaix
+  - polyp_al_speciation_ph5_85
+  - density_<P>                          # V_m_fu = M_fu / rho_s (specification v5) with molar_mass_<P>
+  - molar_mass_<P>
+
+# ---------------------------------------------------------------- route layer (specification v6)
+# Evaluated by biomin_screen.screen.routes (K2h, R1, R2, wetting, framing, matrix, baselines) and biomin_screen.screen.stage_rows (stage rows,
+# conversion rows, the panel of phosphates used as formed). A treatment is filled only where a decision table already says what a
+# missing key does; every other slot reads "pending specification". Names are the data/params.yaml keys.
+route_layer:
+  evaluators: [hydrolysis_descriptor, formation_accessibility, liquid_precursor_wetting]
+  hydrolysis:                            # K2h, table H1 to H4
+    hydrolysis_polyp_k_ph7_to_13: {symbol: k_hydrolysis, links: [K2h], treatment: pending specification, note: 'a pH-range rate (7 to 13) under a symbol the contract does not have (k_hyd)'}
+    rows_read_as_ranges:                 # sourced rate constants; the plausible range of a row is its prior support
+      - hydrolysis_polyp_k_ph6
+      - hydrolysis_polyp_k_ph6_ca1mm
+      - hydrolysis_polyp_k_ph8
+      - hydrolysis_polyp_k_ph8_ca1mm
+    derived_not_read: [hydrolysis_polyp_half_life_<state>, hydrolysis_ca_enhancement_ph6, hydrolysis_ca_enhancement_ph8]
+    context_not_a_covered_row: [hydrolysis_pp_half_life_100c_ph10]
+    hydrolysis_row_conditions: {links: [K2h], treatment: pending specification, note: 'pH, Ca2+ level and temperature of each measured row (from each key''s source); a row without them covers no state (H1)'}
+    hydrolysis_transfer_factor: {symbol: tau_k, links: [K2h], treatment: pending specification, effect_if_absent: 'a covered state is undetermined (named gap)'}
+    hydrolysis_f_min: {symbol: f_min, links: [K2h], treatment: pending specification, effect_if_absent: 'a covered state is undetermined (named gap)'}
+    hydrolysis_t_wet_r1: {symbol: t_wet, links: [K2h], treatment: pending specification, effect_if_absent: 'a covered state is undetermined (named gap)'}
+    hydrolysis_t_wet_r2: {symbol: t_wet, links: [K2h], treatment: pending specification, effect_if_absent: 'a covered state is undetermined (named gap)'}
+    hydrolysis_t_wet_r3: {symbol: t_wet, links: [K2h], treatment: pending specification, effect_if_absent: 'a covered state is undetermined (named gap)'}
+    hydrolysis_a_w_dry: {symbol: a_w_dry, links: [K2h], treatment: pending specification}
+    hydrolysis_temperature_tolerance: {links: [K2h], treatment: unresolved, effect: 'no state is covered: H1 undetermined, never gating'}
+    hydrolysis_polyp_25c_literature_halflife: {symbol: t_half_hyd, links: [K2h], treatment: unresolved, effect: 'context only; not a covered row (coverage)'}
+  r1:                                    # K3 route form, table F1r to F4r
+    polyp_log10_ksp_al: {symbol: K_sp_AlPP, links: [K3, K2], treatment: unresolved, effect: 'F1r: R1 undetermined with the flip value K_sp* = IAP_AlPP printed'}
+    polyp_al_log_beta1_linear: {symbol: beta_AlPP, links: [K3], treatment: unresolved, effect: 'evaluated at beta_AlPP = 0 (upper bound on a_PP), flagged complexation gap: F2r stands, F3r labelled optimistic'}
+    polyp_al_log_beta1_linear_chain_unit_w15: {symbol: beta_AlPP, links: [K3], treatment: unresolved, effect: 'gap key, same quantity as polyp_al_log_beta1_linear: evaluated at beta_AlPP = 0 (upper bound on a_PP), flagged complexation gap'}
+    polyp_al_log_beta1_cyclo: {keys: [polyp_al_log_beta1_cyclo_p3, polyp_al_log_beta1_cyclo_p4, polyp_al_log_beta1_cyclo_p6, polyp_al_log_beta1_cyclo_p8], links: [K3], treatment: pending specification, note: 'whether ring constants apply to the specified chain distribution is not decided'}
+    polyp_chain_distribution: {symbol: n_chain, links: [K3], treatment: pending specification}
+    polyp_al_activity_pit: {symbol: a_Al, links: [K3], treatment: unresolved, effect: 'the pit-state row is undetermined; the oxide-equilibrium row is unaffected (the two are never combined)'}
+    gel_kinetics: {links: [K3], treatment: unresolved, effect: 'gelation against hydrolysis stays a labelled hypothesis'}
+    descriptors: [polyp_chain_length_material]
+  r2:                                    # K3 route form, table B1 to B4; K4 route form
+    coacervate_binodal_map: {links: [K3], treatment: unresolved, effect: 'B1: R2 undetermined at every state'}
+    coacervate_pH_window: {symbol: pH, links: [K3], treatment: pending specification}
+    coacervate_gamma_s0_dilute: {symbol: gamma_al_l0, links: [K4], treatment: unresolved, effect: 'with coacervate_gamma_s0_dense: the site-free difference is a gap; K4 route form undetermined unless a contact angle exists'}
+    coacervate_gamma_s0_dense: {symbol: gamma_al_n0, links: [K4], treatment: unresolved, effect: 'as coacervate_gamma_s0_dilute'}
+    coacervate_contact_angle_alumina: {links: [K4], treatment: unresolved, effect: 'no alternative route to Dgamma = gamma_nl cos(theta)'}
+    coacervate_gamma_nl: {symbol: gamma_nl_c, links: [K4], treatment: unresolved, effect: 'the negligible-gamma_nl limit is evaluated and labelled; the flip value reads m_S + gamma_nl (gap)'}
+    coacervate_gamma_analog: {symbol: gamma_nl_c, links: [K4], treatment: pending specification, note: 'whether the flagged analog enters the comparable-gamma_nl limit is not decided'}
+    polyp_ads_alumina_gamma_max: {symbol: Gamma_P, links: [K4], treatment: pending specification, note: 'admissibility of gamma_sl and gamma_sn only (the site term cancels in Dgamma)'}
+    polyp_ads_alumina_k_langmuir: {symbol: K_P, links: [K4], treatment: pending specification, note: 'admissibility only'}
+    polyp_ads_alumina_layer_thickness: {symbol: delta_P, links: [K4], treatment: pending specification, note: 'admissibility only'}
+    descriptors: [coacervate_ca_threshold, coacervate_onset_volume, coacervate_ca_to_polyp_ratio, coacervate_viscosity]
+  products:                              # K2 and the amorphous framing of the route products
+    polyp_log10_ksp_cameta: {symbol: K_sp, links: [K2], treatment: unresolved, effect: 'K2 of the Ca-polyphosphate glass not evaluable: undetermined'}
+    glass_crystal_correction_<P>: {symbol: Delta_G_gc, links: [K1, K2], treatment: pending specification, note: 'the bounded, labelled correction; the table key carries an enthalpy (H_phase), the contract a free energy'}
+    glass_dfh_alpp_gel: {links: [K1], treatment: pending specification}
+    s0_cameta_glass: {symbol: S_std, links: [K1, K2], treatment: unresolved, effect: 'gap (no measurement of Ca(PO3)2 glass): no glass-direct entropy; the glass framing keeps the crystalline value plus the bounded labelled correction'}
+    h_cryst_cameta_glass: {symbol: H_phase, links: [K1, K2], treatment: unresolved, effect: 'gap (no crystallisation enthalpy of Ca(PO3)2 glass): as s0_cameta_glass; the enthalpy of glass_crystal_correction_cameta is not replaced'}
+  k1_bracket:                            # K1 lower bound E_lb : the transfer premise needs these keys
+    transfer_free_energy_ca_water_pc: {symbol: Delta_G_tr_rel, links: [K1], treatment: unresolved, effect: 'E_lb pending and no K1 pass possible (the ladder reads E_lb as pending); the verdict is falsified, inconclusive or undetermined only'}
+    transfer_free_energy_al_water_pc: {symbol: Delta_G_tr_rel, links: [K1], treatment: unresolved, effect: 'E_lb pending and no K1 pass possible (the ladder reads E_lb as pending); the verdict is falsified, inconclusive or undetermined only'}
+    transfer_multi_gap_keys:             # gap keys of other ions and solvents: not read by any K1 row
+      keys: [transfer_multi_la3_water_acetonitrile, transfer_multi_mg2_water_pc, transfer_multi_zn2_water_pc, transfer_multi_ba2_water_pc]
+      links: [K1]
+      treatment: unresolved
+      effect: 'no value and not Ca2+ or Al3+: not an input of Delta_G_tr_rel or E_lb; comparison only (the charge-extrapolation check of the Pourbaix package), no verdict rests on them'
+    exchange_entropy_al_crystal_bound: {symbol: Delta_S_ex, links: [K1], treatment: unresolved, effect: 'gap (no entropy of crystalline Al(ClO4)3): the entropy bound of the Al exchange row is pending; that row is undetermined, never a pass'}
+  matrix:                                # table M1 to M4: the matrix never gates
+    matrix_service_limit_<rung>: {links: [K1], treatment: unresolved, effect: 'M3: matrix-risk flag, no ceiling'}
+    matrix_oxidation_onset_chitosan: {symbol: E_ox, links: [K1], treatment: unresolved, effect: 'M3: matrix-risk flag, no ceiling (no tier 1 for an organic polymer)'}
+    matrix_oxidation_onset_pda: {symbol: E_ox, links: [K1], treatment: unresolved, effect: 'M3: matrix-risk flag; the stated PDA risk is printed'}
+    matrix_thermal_budget: {links: [K1], treatment: unresolved, effect: 'M4 not applied: one variant (with the matrix) reported'}
+    matrix_chitosan_polyp_complex: {links: [K1], treatment: pending specification}
+    descriptors: [matrix_chitosan_pka]
+  baselines:                             # table L1 to L5: K1, K2, K4 only
+    composition_solubility: {links: [K2], treatment: unresolved, effect: 'L2 undetermined (L3 for the Hydro-Quebec film: inference from chemistry)'}
+    matrix_baseline_tsinghua_film_thickness: {symbol: d_film, links: [K4], treatment: unresolved, effect: 'L5 undetermined'}
+    matrix_baseline_hq_film_thickness: {symbol: d_film, links: [K4], treatment: unresolved, effect: 'L5 undetermined'}
+  conversion:                            # conversion-step rows
+    pairs: [brushite-monetite, monetite-capp, acp-condensed, hap-condensed]
+    hydration_a_w_star_<pair>: {links: [conversion], treatment: unresolved, effect: 'a_w* printed as pending'}
+    hydration_conversion_temperature_<pair>: {links: [conversion], treatment: unresolved, effect: 'status undetermined'}
+    matrix_baseline_tsinghua_cure_range: {links: [conversion], treatment: unresolved, effect: 'status undetermined'}
+
+# ---------------------------------------------------------------- parameter keys accounted for by name
+accounted_by_name:
+  per_phase: [log10_ksp_<P>, v_m_<P>, gamma_nl_<P>, gamma_nv_<P>, n_hyd_<P>]   # the keys block above, per mineral
+  design: [p_total_slurry, cutoff_classes, a_oh_range, a_w_cell]               # design_axes above
+  k1_tier2: [margin_service, t_svc_min, j_svc]                                 # margins and read_from_ladder above
+  ladder_film: [log10_ksp_el_<film>, sigma_corr_<film>, rho_film_<film>, dv_film, j_corr_max, t_max_corr, s_tol]
+  slurry_acid_window: [p_total_slurry_h3po4_window]                            # gap key (mol m^-3), no value: unresolved
+  sink_margin: [liclo4_solubility_pc, liclo4_gamma_pc]                         # keys of m_sink (thresholds sink), no value: a gap leaves the dilute exclusion undetermined

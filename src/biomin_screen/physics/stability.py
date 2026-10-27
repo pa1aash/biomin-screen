@@ -1,0 +1,207 @@
+"""Thermodynamic stability potentials.
+
+R-slurry: the aqueous Pourbaix potential per non-O non-H atom with O and H exchanged with
+water, protons and electrons. R-cell: the Li-open grand potential at the electrode
+potential on the Li+/Li scale. Hull construction over competing species is not here.
+"""
+import numpy as np
+
+from biomin_screen.physics._domain import non_negative, positive, real, scalar_or_array
+from biomin_screen.physics.constants import FARADAY, GAS_CONSTANT
+
+
+def pourbaix_potential(G_phase, mu_H2O, N_O, N_H, N_M, Q_charge, T, pH, E_SHE):
+    """Pourbaix potential Psi of a species per non-O non-H atom, J mol^-1.
+
+    (G - n_O mu_H2O - R T ln10 (2 n_O - n_H) pH - (2 n_O - n_H + Q) F E_SHE) / n_M.
+    """
+    g = real("G_phase", G_phase)
+    mu = real("mu_H2O", mu_H2O)
+    no = non_negative("N_O", N_O)
+    nh = non_negative("N_H", N_H)
+    nm = positive("N_M", N_M)
+    q = real("Q_charge", Q_charge)
+    t = positive("T (temperature)", T)
+    ph = real("pH", pH)
+    e = real("E_SHE (potential vs SHE)", E_SHE)
+    nu = 2.0 * no - nh
+    return scalar_or_array((g - no * mu - GAS_CONSTANT * t * np.log(10.0) * nu * ph
+                            - (nu + q) * FARADAY * e) / nm)
+
+
+def energy_above_pourbaix_hull(Psi_pbx, Psi_hull):
+    """Energy above the aqueous Pourbaix hull Psi - Psi_hull, J mol^-1 (non-negative)."""
+    p = real("Psi_pbx", Psi_pbx)
+    h = real("Psi_hull", Psi_hull)
+    if np.any(p < h):
+        raise ValueError("Psi_pbx lies below Psi_hull: the hull is the lower envelope")
+    return scalar_or_array(p - h)
+
+
+def lithium_chemical_potential(mu_Li0, E_Li):
+    """Li chemical potential imposed by the electrode potential, mu_Li0 - F E_Li (J mol^-1)."""
+    m = real("mu_Li0", mu_Li0)
+    e = real("E_Li (potential vs Li+/Li)", E_Li)
+    return scalar_or_array(m - FARADAY * e)
+
+
+def lithium_grand_potential(G_phase, N_Li, mu_Li0, E_Li):
+    """Li-open grand potential G - n_Li mu_Li per formula unit, J mol^-1."""
+    g = real("G_phase", G_phase)
+    n = non_negative("N_Li", N_Li)
+    return scalar_or_array(g - n * lithium_chemical_potential(mu_Li0, E_Li))
+
+
+def reaction_grand_potential_change(Delta_G_r, Delta_n_Li, E_Li):
+    """Li-open grand-potential change of a decomposition reaction, Delta_G_r - Delta_n F E_Li (J mol^-1).
+
+    Delta_n_Li Li atoms are released to the Li+/Li reservoir per formula unit (negative
+    when taken up). Positive means the phase is stable against that reaction at E_Li.
+    """
+    g = real("Delta_G_r (reaction free energy)", Delta_G_r)
+    dn = real("Delta_n_Li (Li released)", Delta_n_Li)
+    e = real("E_Li (potential vs Li+/Li)", E_Li)
+    return scalar_or_array(g - dn * FARADAY * e)
+
+
+def reaction_limit_potential(Delta_G_r, Delta_n_Li):
+    """Potential vs Li+/Li at which one reaction's grand-potential change vanishes, in V.
+
+    Delta_G_r / (Delta_n_Li F). E_ox is the minimum over reactions with Delta_n_Li > 0 and
+    E_red the maximum over reactions with Delta_n_Li < 0; a reaction exchanging no Li has no
+    limit potential and is rejected.
+    """
+    g = real("Delta_G_r (reaction free energy)", Delta_G_r)
+    dn = real("Delta_n_Li (Li released)", Delta_n_Li)
+    if np.any(dn == 0):
+        raise ValueError("Delta_n_Li = 0: a reaction that exchanges no Li sets no potential limit")
+    return scalar_or_array(g / (dn * FARADAY))
+
+
+# ------------------------------------------------------------------ K1 bracket
+def _onset(name, Delta_G, Delta_n_Li):
+    g = real(name, Delta_G)
+    dn = real("Delta_n_Li (Li released)", Delta_n_Li)
+    if np.any(dn == 0):
+        raise ValueError("Delta_n_Li = 0: a reaction that exchanges no Li sets no potential limit")
+    return g / (dn * FARADAY)
+
+
+def onset_solid_salt_sink(Delta_G_r_ss, Delta_n_Li):
+    """E_ub = Delta_G_r_ss / (Delta_n_Li F), V vs Li+/Li: the onset with the solid-salt (LiClO4) sink.
+
+    The onset for a LiClO4-saturated sink (solid-salt reference state); below saturation the bound is E_ub_sink.
+
+    An upper bound on the thermodynamic onset whatever the solvent: a falsification on it stands, a pass does not.
+    """
+    return scalar_or_array(_onset("Delta_G_r_ss (solid-salt reaction free energy)", Delta_G_r_ss, Delta_n_Li))
+
+
+def onset_aqueous_sink(Delta_G_r_aq, Delta_n_Li):
+    """E_lb = Delta_G_r_aq / (Delta_n_Li F), V vs Li+/Li: every ionic product and the consumed Li+ aqueous.
+
+    A lower bound on the onset in the cell solvent only under the transfer premise (Delta_G_tr_rel >= 0).
+    """
+    return scalar_or_array(_onset("Delta_G_r_aq (aqueous-sink reaction free energy)", Delta_G_r_aq, Delta_n_Li))
+
+
+def onset_cell_solvent(Delta_G_r_aq, Delta_G_tr_rel, Delta_n_Li):
+    """E_solv = (Delta_G_r_aq + Delta_G_tr_rel) / (Delta_n_Li F), V vs Li+/Li in the cell solvent.
+
+    Used in place of E_lb where the transfer premise is violated (Delta_G_tr_rel < 0).
+    """
+    g = real("Delta_G_r_aq (aqueous-sink reaction free energy)", Delta_G_r_aq)
+    tr = real("Delta_G_tr_rel (charge-balanced transfer free energy)", Delta_G_tr_rel)
+    return scalar_or_array(_onset("Delta_G_r_aq + Delta_G_tr_rel", g + tr, Delta_n_Li))
+
+
+def relative_transfer_born(B_born, z_M, r_M, r_Li):
+    """Born-continuum reading of the transfer premise B_born (z_M^2 / r_M - z_M / r_Li), J mol^-1.
+
+    Plausibility only, never decides: with B_born >= 0 (cell solvent less polar than water) the premise holds iff
+    z_M / r_M >= 1 / r_Li.
+    """
+    b = real("B_born (Born prefactor)", B_born)
+    z = positive("z_M (cation charge)", z_M)
+    rm = positive("r_M (cation radius)", r_M)
+    rl = positive("r_Li (Li+ radius)", r_Li)
+    return scalar_or_array(b * (z * z / rm - z / rl))
+
+
+def onset_glass(Delta_G_r, Delta_G_gc, Delta_n_Li):
+    """E_window_glass = (Delta_G_r - Delta_G_gc) / (Delta_n_Li F), V: onset of a reaction that consumes the glass.
+
+    The glass lies Delta_G_gc = G_glass - G_crystal >= 0 above the crystal, so its onset is lower; the governing row
+    of the in-situ routes. Delta_G_gc = 0 gives the crystalline onset.
+    """
+    g = real("Delta_G_r (reaction free energy)", Delta_G_r)
+    gc = non_negative("Delta_G_gc (glass-to-crystal free energy)", Delta_G_gc)
+    return scalar_or_array(_onset("Delta_G_r - Delta_G_gc", g - gc, Delta_n_Li))
+
+
+def onset_aqueous_sink_glass(Delta_G_r_aq, Delta_G_gc, Delta_n_Li):
+    """E_lb_glass = (Delta_G_r_aq - Delta_G_gc) / (Delta_n_Li F), V: lower end of the amorphous K1 bracket."""
+    g = real("Delta_G_r_aq (aqueous-sink reaction free energy)", Delta_G_r_aq)
+    gc = non_negative("Delta_G_gc (glass-to-crystal free energy)", Delta_G_gc)
+    return scalar_or_array(_onset("Delta_G_r_aq - Delta_G_gc", g - gc, Delta_n_Li))
+
+
+def onset_solid_salt_sink_glass(Delta_G_r_ss, Delta_G_gc, Delta_n_Li):
+    """E_ub_glass = (Delta_G_r_ss - Delta_G_gc) / (Delta_n_Li F), V: upper end of the amorphous K1 bracket."""
+    g = real("Delta_G_r_ss (solid-salt reaction free energy)", Delta_G_r_ss)
+    gc = non_negative("Delta_G_gc (glass-to-crystal free energy)", Delta_G_gc)
+    return scalar_or_array(_onset("Delta_G_r_ss - Delta_G_gc", g - gc, Delta_n_Li))
+
+
+# ------------------------------------------------------------------ hydrated amorphous phases 
+def onset_solid_salt_sink_hydrated_amorphous(Delta_G_r_ss, Delta_G_gc_w, n_hyd, a_w, T, Delta_n_Li):
+    """E_ub_hydrated_am = (Delta_G_r_ss - Delta_G_gc_w + n_hyd R T ln a_w) / (Delta_n_Li F), V vs Li+/Li.
+
+    Upper end of the K1 bracket of a hydrated amorphous phase against its same-composition crystalline reference plus
+    n_hyd liquid water at a_w = 1; Delta_G_r_ss is the solid-salt reaction of that crystalline reference and the released
+    water leaves at the cell water activity a_w <= 1. Delta_G_gc_w = G(A) - G(C) - n_hyd mu_w(l, a_w = 1) >= 0, so the
+    value never exceeds E_ub of the reference row: it falsifies only and never passes.
+    """
+    g = real("Delta_G_r_ss (solid-salt reaction free energy of the crystalline reference)", Delta_G_r_ss)
+    gc = non_negative("Delta_G_gc_w (hydrated glass-to-crystal free energy, water at unit activity)", Delta_G_gc_w)
+    n = non_negative("n_hyd (structural water per formula unit)", n_hyd)
+    aw = positive("a_w (water activity)", a_w)
+    if np.any(aw > 1.0):
+        raise ValueError("a_w must lie in (0, 1]")
+    t = positive("T (temperature)", T)
+    return scalar_or_array(_onset("Delta_G_r_ss - Delta_G_gc_w + n_hyd R T ln a_w",
+                                  g - gc + n * GAS_CONSTANT * t * np.log(aw), Delta_n_Li))
+
+
+# ------------------------------------------------------------------ sink reference state of E_ub
+def sink_margin(nu_salt, T, a_pm_sat, a_pm):
+    """m_sink = 2 nu_salt (R T / F) ln(a_pm_sat / a_pm), V: one-sided added margin of the solid-salt upper bound.
+
+    a_pm_sat and a_pm are the stoichiometric mean ionic activities of LiClO4 at saturation and at the specified
+    concentration (molar scale). Zero at saturation, positive below it (a_pm < a_pm_sat), negative if the inputs describe
+    a supersaturated electrolyte, which the one-sided margin never uses. Both activities are inputs: no value is bound here.
+    """
+    nu = non_negative("nu_salt (LiClO4 consumed per electron)", nu_salt)
+    t = positive("T (temperature)", T)
+    sat_ = positive("a_pm_sat (mean ionic activity at saturation)", a_pm_sat)
+    act = positive("a_pm (mean ionic activity)", a_pm)
+    return scalar_or_array(2.0 * nu * GAS_CONSTANT * t / FARADAY * np.log(sat_ / act))
+
+
+def onset_solid_salt_sink_dilute(Delta_G_r_ss, Delta_n_Li, nu_salt, T, a_pm_sat, a_pm):
+    """E_ub_sink = E_ub + m_sink, V vs Li+/Li: rigorous upper bound on the onset at the specified LiClO4 concentration."""
+    return scalar_or_array(onset_solid_salt_sink(Delta_G_r_ss, Delta_n_Li) + sink_margin(nu_salt, T, a_pm_sat, a_pm))
+
+
+def onset_solid_salt_sink_product_unsaturated(Delta_G_r_ss, Delta_n_Li, nu_prod, T, x_sat_prod):
+    """E_ub_prod_unsat = E_ub + nu_prod (R T / F) ln(x_sat_prod), V: the product perchlorate dissolves below saturation.
+
+    x_sat_prod lies in (0, 1]; the result never exceeds E_ub, so the solid product is the worst case for an exclusion.
+    Reported, never a verdict quantity.
+    """
+    nu = non_negative("nu_prod (product salt released per electron)", nu_prod)
+    t = positive("T (temperature)", T)
+    x = positive("x_sat_prod (saturation ratio of the product salt)", x_sat_prod)
+    if np.any(x > 1.0):
+        raise ValueError("x_sat_prod must lie in (0, 1]")
+    return scalar_or_array(onset_solid_salt_sink(Delta_G_r_ss, Delta_n_Li) + nu * GAS_CONSTANT * t / FARADAY * np.log(x))

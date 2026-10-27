@@ -1,0 +1,965 @@
+# Display labels of the parameter table: a quantity name per data/params.yaml key. Text only; no values.
+gamma_nl_calcite:
+  label: calcite-water interfacial free energy
+gamma_nl_acc:
+  label: ACC-water interfacial free energy
+gamma_sl0_template:
+  label: template-water interfacial free energy, Ca-free (cut at zero)
+gamma_sl0_template_untruncated:
+  label: template-water interfacial free energy, uncut
+gamma_sn0_template:
+  label: template-nucleus contact energy, dry reference
+delta_gamma_w:
+  label: water-displacement correction
+gamma_eff_het_organic:
+  label: effective interfacial energy on organic templates
+v_m_calcite:
+  label: molar volume, calcite
+v_m_acc:
+  label: molar volume, ACC (with structural water)
+v_m_aragonite:
+  label: molar volume, aragonite
+v_m_vaterite:
+  label: molar volume, vaterite
+log10_ksp_calcite:
+  label: solubility product, calcite
+log10_ksp_acc:
+  label: solubility product, ACC
+log10_ksp_aragonite:
+  label: solubility product, aragonite
+log10_ksp_vaterite:
+  label: solubility product, vaterite
+acc_offset:
+  label: free-energy offset of ACC above calcite
+pk1_carbonic:
+  label: first dissociation constant of carbonic acid
+pk2_carbonic:
+  label: second dissociation constant of carbonic acid
+log10_k_cahco3:
+  label: formation constant of CaHCO3+
+log10_k_caco3_aq:
+  label: formation constant of CaCO3(aq)
+a_co3_slurry:
+  label: carbonate activity in the slurry
+gamma_nv_calcite:
+  label: dry surface energy of calcite {10-14}
+gamma_nv_acc:
+  label: dry surface energy of ACC
+gamma_nv_acc_calcite_analog:
+  label: dry surface energy of ACC, calcite analog
+gamma_sn_ignorance_calcite:
+  label: template-nucleus contact energy in water, calcite framing
+gamma_sn_ignorance_acc:
+  label: template-nucleus contact energy in water, ACC framing
+gamma_sn_ignorance_acc_analog:
+  label: template-nucleus contact energy, ACC framing with calcite analog
+gamma_ow_ignorance:
+  label: oxide-water interfacial free energy
+gamma_op_ignorance:
+  label: oxide-polymer interfacial free energy
+log10_k_caoh:
+  label: hydrolysis constant of CaOH+
+debye_huckel_a:
+  label: Debye-Hueckel constant A
+davies_b:
+  label: Davies linear coefficient
+davies_i_val:
+  label: validity limit of the Davies equation
+ca_total_slurry:
+  label: total dissolved calcium (design input)
+acc_hydration_n:
+  label: structural water of ACC per CaCO3
+a_w_drying_secondary:
+  label: water activity, secondary (vacuum) drying state
+a_ca_slurry:
+  label: Ca2+ activity in the slurry
+c_bulk_slurry:
+  label: bulk Ca2+ concentration
+gamma_w:
+  label: surface tension of water
+water_density:
+  label: density of water
+pka_catechol:
+  label: first dissociation constant of catechol
+pka2_catechol:
+  label: second dissociation constant of catechol
+pka_carboxyl:
+  label: dissociation constant of carboxyl groups
+delta_g_site:
+  label: transfer free energy to the binding site
+log10_k_ca_catecholate:
+  label: Ca2+-catecholate binding constant
+log10_k_ca_carboxylate:
+  label: Ca2+-carboxylate binding constant
+dg_bind_ca_acetate:
+  label: Ca2+-acetate binding free energy
+dg_bind_ca_cooh_monolayer:
+  label: Ca2+ binding to carboxyl monolayers (minus free energy)
+dg_bind_calcite_template:
+  label: calcite-template binding free energy
+gamma_s_site_density:
+  label: areal density of binding sites
+delta_s:
+  label: binding-layer thickness
+site_footprint_area:
+  label: footprint area of one binding site
+pda_density:
+  label: mass density of polydopamine
+pda_binding_site_content:
+  label: accessible binding sites of polydopamine per mass
+template_group_density:
+  label: volume density of catechol groups
+template_group_density_site_analog:
+  label: volume density of binding groups, site analog
+template_layer_thickness:
+  label: template (polydopamine) layer thickness
+ca_ionic_radius:
+  label: ionic radius of Ca2+
+ca_o_distance_aqueous_analog:
+  label: Ca-O distance of hydrated Ca2+, analog
+gamma_s_geometric_bound_analog:
+  label: geometric upper bound on the site density, analog
+v_site:
+  label: volume per binding site
+dg_hyd_ca_marcus:
+  label: hydration free energy of Ca2+, Marcus scale
+dg_hyd_ca_tissandier:
+  label: hydration free energy of Ca2+, cluster-pair scale
+gamma_ow_alumina:
+  label: oxide-water interfacial free energy (measured)
+gamma_op:
+  label: oxide-polymer interfacial free energy (measured)
+gamma_o_alumina:
+  label: dry surface energy of the Al oxide
+gamma_p_pda:
+  label: dry surface energy of polydopamine
+delta_f_pmf:
+  label: anchoring free energy from the PMF
+w_adh_wet_catechol_oxide_analog:
+  label: wet adhesion of catechol films on oxides, analog
+a_c:
+  label: fragment contact area
+rho_e_caco3:
+  label: electronic resistivity of CaCO3
+phi_b_caco3:
+  label: tunnelling barrier height of CaCO3
+band_gap_caco3:
+  label: band gap of CaCO3
+j_0_tunnel:
+  label: tunnelling prefactor current density
+r_a_max:
+  label: admissible area-specific resistance
+j_req:
+  label: required current density
+d_film:
+  label: film thickness
+g_phase_database:
+  label: database Gibbs energies of phases
+mu_li0:
+  label: Li chemical potential in Li metal
+delta_g_r:
+  label: reaction free energy against Li metal
+mu_h2o:
+  label: chemical potential of water
+drg_caco3_decomposition:
+  label: Gibbs energy of CaCO3 -> CaO + CO2
+drh_caco3_decomposition:
+  label: enthalpy of CaCO3 -> CaO + CO2
+dfg_caco3_calcite:
+  label: Gibbs energy of formation, calcite
+dfg_caco3_aragonite:
+  label: Gibbs energy of formation, aragonite
+dfg_cao:
+  label: Gibbs energy of formation, lime
+dfg_co2_g:
+  label: Gibbs energy of formation, CO2(g)
+dfg_ca2_aq:
+  label: Gibbs energy of formation, Ca2+(aq)
+dfg_co3_aq:
+  label: Gibbs energy of formation, CO3 2-(aq)
+dfg_hco3_aq:
+  label: Gibbs energy of formation, HCO3-(aq)
+dfg_co2_aq:
+  label: Gibbs energy of formation, CO2(aq)
+dfg_h2o_l:
+  label: Gibbs energy of formation, H2O(l)
+dfg_al3_aq:
+  label: Gibbs energy of formation, Al3+(aq)
+dfg_al_oh4_aq:
+  label: Gibbs energy of formation, Al(OH)4-(aq)
+dfg_corundum:
+  label: Gibbs energy of formation, corundum
+dfg_boehmite:
+  label: Gibbs energy of formation, boehmite
+dfg_gibbsite:
+  label: Gibbs energy of formation, gibbsite
+dfg_ca_no3_2:
+  label: Gibbs energy of formation, Ca(NO3)2
+dfg_cacl2:
+  label: Gibbs energy of formation, CaCl2
+dfg_caso4:
+  label: Gibbs energy of formation, CaSO4
+dfg_al2_so4_3:
+  label: Gibbs energy of formation, Al2(SO4)3
+dfg_li_aq:
+  label: Gibbs energy of formation, Li+(aq)
+dfg_licl:
+  label: Gibbs energy of formation, LiCl
+dfg_lino3:
+  label: Gibbs energy of formation, LiNO3
+dfg_li2so4:
+  label: Gibbs energy of formation, Li2SO4
+dfg_liclo4_aq:
+  label: Gibbs energy of formation, LiClO4(aq)
+dfg_al_no3_3:
+  label: Gibbs energy of formation, Al(NO3)3
+dfg_ca_clo4_2:
+  label: Gibbs energy of formation, Ca(ClO4)2
+s_li:
+  label: standard entropy, Li
+s_ca:
+  label: standard entropy, Ca
+s_liclo4:
+  label: standard entropy, LiClO4
+s_cacl2:
+  label: standard entropy, CaCl2
+s_ca_no3_2:
+  label: standard entropy, Ca(NO3)2
+s_licl:
+  label: standard entropy, LiCl
+s_nacl:
+  label: standard entropy, NaCl
+s_kcl:
+  label: standard entropy, KCl
+s_lino3:
+  label: standard entropy, LiNO3
+s_nano3:
+  label: standard entropy, NaNO3
+s_kno3:
+  label: standard entropy, KNO3
+s_naclo4:
+  label: standard entropy, NaClO4
+s_kclo4:
+  label: standard entropy, KClO4
+s_ca_clo4_2:
+  label: entropy of Ca(ClO4)2
+s_ca_clo4_2_analog_low:
+  label: entropy of Ca(ClO4)2, analog lower end
+s_ca_clo4_2_analog_high:
+  label: entropy of Ca(ClO4)2, analog upper end
+exchange_entropy_bound:
+  label: bound on the exchange entropy Ca + 2 LiClO4
+dfh_ca_clo4_2:
+  label: formation enthalpy of Ca(ClO4)2
+dfh_liclo4:
+  label: formation enthalpy of LiClO4
+u_tab_dfg_caco3:
+  label: tabulated uncertainty, Gibbs energy of calcite
+u_tab_dfg_co2:
+  label: tabulated uncertainty, Gibbs energy of CO2
+u_tab_dfh_liclo4:
+  label: tabulated uncertainty, enthalpy of LiClO4
+nbs_last_digit_dfh_ca_clo4_2:
+  label: last printed figure, enthalpy of Ca(ClO4)2
+nbs_uncertainty_units:
+  label: NBS uncertainty convention, last-figure units
+u_tab_dfh_ca_clo4_2:
+  label: tabulated uncertainty, enthalpy of Ca(ClO4)2
+dfg_al_clo4_3:
+  label: Gibbs energy of formation, Al(ClO4)3
+dfg_alcl3:
+  label: Gibbs energy of formation, AlCl3
+formation_energy_mae:
+  label: error of corrected DFT formation energies, per atom
+decomposition_energy_mad:
+  label: error of DFT decomposition energies, per atom
+oxide_correction_mp2020:
+  label: fitted oxide energy correction
+li2co3_oxidation_onset:
+  label: Li2CO3 oxidation onset (gas evolution)
+li2co3_oxidation_equilibrium_potential:
+  label: Li2CO3 oxidation equilibrium potential
+transfer_free_energy_li_water_pc:
+  label: transfer free energy of Li+, water to PC
+solvation_ca_vs_li:
+  label: solvation of Ca2+ relative to two Li+ in the electrolyte
+solvation_al_vs_li:
+  label: solvation of Al3+ relative to three Li+ in the electrolyte
+hydration_free_energy_li:
+  label: hydration free energy of Li+
+hydration_free_energy_ca:
+  label: hydration free energy of Ca2+
+hydration_free_energy_al:
+  label: hydration free energy of Al3+
+solvation_ca_vs_li_water_analog:
+  label: relative solvation of Ca2+ in water, analog
+solvation_al_vs_li_water_analog:
+  label: relative solvation of Al3+ in water, analog
+a_h_cell:
+  label: proton activity in the electrolyte
+a_ca_cell:
+  label: Ca2+ activity in the electrolyte
+a_co3_cell:
+  label: carbonate activity in the electrolyte
+rho_acc:
+  label: mass density of ACC
+c_o_bond_length_calcite:
+  label: C-O bond length, calcite
+c_o_bond_length_acc:
+  label: C-O bond length, ACC
+p_cred:
+  label: credible level of the verdict bands
+p_deg:
+  label: least mass shift counted as degradation
+m_cos:
+  label: nucleation margin on cos theta
+contact_area_definition:
+  label: contact-area rule of the anchoring link
+framing:
+  label: CaCO3 framing (ACC or calcite)
+n_req:
+  label: required areal density of nuclei
+gas_reference_schemes:
+  label: CO2 and O2 reference schemes
+al_phases:
+  label: gated aluminium phases
+m_s:
+  label: conformality margin on the spreading coefficient
+m_seq_method_error:
+  label: sequestration margin, electronic-structure error
+implicit_solvation_error_ion:
+  label: implicit-solvation error of ion hydration
+m_seq_with_solvation:
+  label: sequestration margin with implicit-solvation error
+contact_angle_method_error:
+  label: force-field contact-angle error
+m_w_adh_wet:
+  label: anchoring margin on the wet work of adhesion
+termination_weights:
+  label: weights of the oxide terminations
+m_eff_tunnel:
+  label: effective tunnelling mass
+window_margin:
+  label: stability test, window margin, DFT schemes
+window_margin_expt:
+  label: stability test, window margin, all-experimental route
+ph_slurry:
+  label: slurry pH, unmodified
+ph_slurry_modified:
+  label: slurry pH with modifiers
+e_she_slurry:
+  label: potential of Al vs SHE in alkaline media
+t_slurry:
+  label: slurry temperature
+t_drying_primary:
+  label: primary drying temperature
+t_proc_slurry:
+  label: slurry contact time
+t_drying_secondary:
+  label: secondary (vacuum) drying time
+slurry_solids_fraction:
+  label: solids mass fraction of the slurry
+a_w_slurry:
+  label: water activity, primary drying state
+ionic_strength_slurry:
+  label: ionic strength of the slurry
+dic_slurry:
+  label: dissolved inorganic carbon of the slurry
+j0_het:
+  label: heterogeneous nucleation prefactor
+patch_area:
+  label: particle-collector contact patch area
+nucleation_density:
+  label: CaCO3 nucleation density
+e_cell_max_lfp:
+  label: charge cut-off, LiFePO4
+e_cell_max_layered:
+  label: charge cut-off, layered NMC/NCA
+e_cell_max_lco:
+  label: charge cut-off, LiCoO2
+e_cell_max_lmo:
+  label: charge cut-off, LiMn2O4
+e_cell_max_lnmo:
+  label: charge cut-off, LiNi0.5Mn1.5O4
+e_cell_max:
+  label: charge cut-off by cathode class (design axis)
+e_cell_min:
+  label: discharge cut-off
+al_onset_ffree:
+  label: Al oxidation onset, fluorine-free electrolytes
+t_cell:
+  label: cell temperature
+electrolyte_salt_molality:
+  label: salt molality of the electrolyte
+electrolyte_salt_molarity:
+  label: salt concentration of the electrolyte
+electrolyte_water_content:
+  label: water content of the electrolyte
+electrolyte_salts:
+  label: fluorine-free salts considered
+electrolyte_solvents:
+  label: solvents considered
+gamma_pvdf:
+  label: dry surface free energy of PVDF
+gamma_pvdf_dispersive:
+  label: dry surface free energy of PVDF, dispersive part
+gamma_pvdf_polar:
+  label: dry surface free energy of PVDF, polar part
+cathode_particle_diameter:
+  label: cathode secondary-particle diameter
+asperity_contact_area:
+  label: asperity contact area, particle on foil
+template_mass_per_group_min:
+  label: least template mass per coordinating group
+ca_ionic_radius_cn6:
+  label: Ca2+ ionic radius at coordination number 6
+dfg_li2co3:
+  label: Gibbs energy of formation, Li2CO3
+dfg_lial5o8:
+  label: Gibbs energy of formation, LiAl5O8
+s_boehmite:
+  label: standard entropy of boehmite
+nbs_last_digit_dfg_li2co3:
+  label: last printed figure, Gibbs energy of Li2CO3
+u_tab_dfg_li2co3:
+  label: tabulated uncertainty, Gibbs energy of Li2CO3
+nbs_last_digit_dfg_lial5o8:
+  label: last printed figure, Gibbs energy of LiAl5O8
+u_tab_dfg_lial5o8:
+  label: tabulated uncertainty, Gibbs energy of LiAl5O8
+u_tab_dfg_cao:
+  label: tabulated uncertainty, Gibbs energy of lime
+u_tab_dfg_corundum:
+  label: tabulated uncertainty, Gibbs energy of corundum
+window_margin_expt_red_caco3:
+  label: stability test, reduction-limit margin of CaCO3, all-experimental route
+window_margin_expt_red_corundum:
+  label: stability test, reduction-limit margin of corundum, all-experimental route
+work_function_al:
+  label: work function of clean aluminium
+phi_b_caco3_li2co3_analog:
+  label: tunnelling barrier height, Li2CO3 on Li analog
+log10_ksp_hap:
+  label: solubility product, hydroxyapatite
+log10_ksp_acp:
+  label: solubility product, ACP
+log10_ksp_ocp:
+  label: solubility product, OCP
+log10_ksp_btcp:
+  label: solubility product, beta-TCP
+log10_ksp_capp:
+  label: solubility product, Ca pyrophosphate
+log10_ksp_cameta:
+  label: solubility product, Ca metaphosphate
+v_m_hap:
+  label: molar volume, hydroxyapatite
+v_m_acp:
+  label: molar volume, ACP
+v_m_ocp:
+  label: molar volume, OCP
+v_m_btcp:
+  label: molar volume, beta-TCP
+v_m_capp:
+  label: molar volume, Ca pyrophosphate
+v_m_cameta:
+  label: molar volume, Ca metaphosphate
+molar_mass_hap:
+  label: formula weight, hydroxyapatite
+density_hap:
+  label: crystal density, hydroxyapatite
+molar_mass_acp:
+  label: formula weight, ACP
+density_acp:
+  label: crystal density, ACP
+molar_mass_ocp:
+  label: formula weight, OCP
+density_ocp:
+  label: crystal density, OCP
+molar_mass_btcp:
+  label: formula weight, beta-TCP
+density_btcp:
+  label: crystal density, beta-TCP
+molar_mass_capp:
+  label: formula weight, Ca pyrophosphate
+density_capp:
+  label: crystal density, Ca pyrophosphate
+molar_mass_cameta:
+  label: formula weight, Ca metaphosphate
+density_cameta:
+  label: crystal density, Ca metaphosphate
+gamma_nl_hap:
+  label: mineral-water interfacial free energy, hydroxyapatite
+gamma_nv_hap:
+  label: mineral-vacuum surface free energy, hydroxyapatite
+gamma_nl_acp:
+  label: mineral-water interfacial free energy, ACP
+gamma_nv_acp:
+  label: mineral-vacuum surface free energy, ACP
+gamma_nl_ocp:
+  label: mineral-water interfacial free energy, OCP
+gamma_nv_ocp:
+  label: mineral-vacuum surface free energy, OCP
+gamma_nl_btcp:
+  label: mineral-water interfacial free energy, beta-TCP
+gamma_nv_btcp:
+  label: mineral-vacuum surface free energy, beta-TCP
+gamma_nl_capp:
+  label: mineral-water interfacial free energy, Ca pyrophosphate
+gamma_nv_capp:
+  label: mineral-vacuum surface free energy, Ca pyrophosphate
+gamma_nl_cameta:
+  label: mineral-water interfacial free energy, Ca metaphosphate
+gamma_nv_cameta:
+  label: mineral-vacuum surface free energy, Ca metaphosphate
+nu_ca_hap:
+  label: calcium count per formula unit, hydroxyapatite
+nu_x_hap:
+  label: first anion count per formula unit, hydroxyapatite
+nu_y_hap:
+  label: second anion count per formula unit, hydroxyapatite
+n_hyd_hap:
+  label: structural water per formula unit, hydroxyapatite
+nu_ca_acp:
+  label: calcium count per formula unit, ACP
+nu_x_acp:
+  label: first anion count per formula unit, ACP
+nu_y_acp:
+  label: second anion count per formula unit, ACP
+n_hyd_acp:
+  label: structural water per formula unit, ACP
+nu_ca_ocp:
+  label: calcium count per formula unit, OCP
+nu_x_ocp:
+  label: first anion count per formula unit, OCP
+nu_y_ocp:
+  label: second anion count per formula unit, OCP
+n_hyd_ocp:
+  label: structural water per formula unit, OCP
+nu_ca_btcp:
+  label: calcium count per formula unit, beta-TCP
+nu_x_btcp:
+  label: first anion count per formula unit, beta-TCP
+nu_y_btcp:
+  label: second anion count per formula unit, beta-TCP
+n_hyd_btcp:
+  label: structural water per formula unit, beta-TCP
+nu_ca_capp:
+  label: calcium count per formula unit, Ca pyrophosphate
+nu_x_capp:
+  label: first anion count per formula unit, Ca pyrophosphate
+nu_y_capp:
+  label: second anion count per formula unit, Ca pyrophosphate
+n_hyd_capp:
+  label: structural water per formula unit, Ca pyrophosphate
+nu_ca_cameta:
+  label: calcium count per formula unit, Ca metaphosphate
+nu_x_cameta:
+  label: first anion count per formula unit, Ca metaphosphate
+nu_y_cameta:
+  label: second anion count per formula unit, Ca metaphosphate
+n_hyd_cameta:
+  label: structural water per formula unit, Ca metaphosphate
+pka1_h3po4:
+  label: first dissociation constant of H3PO4
+pka2_h3po4:
+  label: second dissociation constant of H3PO4
+pka3_h3po4:
+  label: third dissociation constant of H3PO4
+log10_k_cahpo4_aq:
+  label: CaHPO4(aq) ion-pair constant
+log10_k_cah2po4:
+  label: CaH2PO4+ ion-pair constant
+log10_k_capo4:
+  label: CaPO4- ion-pair constant
+pkw:
+  label: ionic product of water (pKw)
+p_total_slurry:
+  label: total phosphate of the slurry (design axis)
+ph_slurry_acid_adjusted:
+  label: slurry pH set with phosphoric acid
+al_passivation_window:
+  label: pH window of the air-formed oxide on Al
+cutoff_classes:
+  label: charge cutoff classes of K1
+margin_service:
+  label: tier 2 service margin
+t_svc_min:
+  label: minimum service time of a tier 2 record
+j_svc:
+  label: service current-density criterion
+dfg_hap:
+  label: Gibbs energy of formation, hydroxyapatite
+dfh_hap:
+  label: enthalpy of formation, hydroxyapatite
+s_hap:
+  label: standard entropy, hydroxyapatite
+dfg_btcp:
+  label: Gibbs energy of formation, beta-TCP
+dfh_btcp:
+  label: enthalpy of formation, beta-TCP
+s_btcp:
+  label: standard entropy, beta-TCP
+dfg_ocp:
+  label: Gibbs energy of formation, OCP
+dfh_ocp:
+  label: enthalpy of formation, OCP
+s_ocp:
+  label: standard entropy, OCP
+dfg_capp:
+  label: Gibbs energy of formation, Ca pyrophosphate
+dfh_capp:
+  label: enthalpy of formation, Ca pyrophosphate
+s_capp:
+  label: standard entropy, Ca pyrophosphate
+dfg_cameta:
+  label: Gibbs energy of formation, Ca metaphosphate
+dfh_cameta:
+  label: enthalpy of formation, Ca metaphosphate
+s_cameta:
+  label: standard entropy, Ca metaphosphate
+dfg_acp:
+  label: Gibbs energy of formation, ACP
+dfh_acp:
+  label: enthalpy of formation, ACP
+s_acp:
+  label: standard entropy, ACP
+dfg_alpo4:
+  label: Gibbs energy of formation, AlPO4 (berlinite)
+dfh_alpo4:
+  label: enthalpy of formation, AlPO4 (berlinite)
+s_alpo4:
+  label: standard entropy, AlPO4 (berlinite)
+dfg_al_pmeta3:
+  label: Gibbs energy of formation, Al(PO3)3
+dfh_al_pmeta3:
+  label: enthalpy of formation, Al(PO3)3
+s_al_pmeta3:
+  label: standard entropy, Al(PO3)3
+dfg_li3po4:
+  label: Gibbs energy of formation, Li3PO4
+dfh_li3po4:
+  label: enthalpy of formation, Li3PO4
+s_li3po4:
+  label: standard entropy, Li3PO4
+dfg_po4_aq:
+  label: Gibbs energy of formation, PO4(3-) aq
+dfh_po4_aq:
+  label: enthalpy of formation, PO4(3-) aq
+s_po4_aq:
+  label: standard entropy, PO4(3-) aq
+dfg_hpo4_aq:
+  label: Gibbs energy of formation, HPO4(2-) aq
+dfh_hpo4_aq:
+  label: enthalpy of formation, HPO4(2-) aq
+s_hpo4_aq:
+  label: standard entropy, HPO4(2-) aq
+dfg_h2po4_aq:
+  label: Gibbs energy of formation, H2PO4(-) aq
+dfh_h2po4_aq:
+  label: enthalpy of formation, H2PO4(-) aq
+s_h2po4_aq:
+  label: standard entropy, H2PO4(-) aq
+dfg_h3po4_aq:
+  label: Gibbs energy of formation, H3PO4 aq
+dfh_h3po4_aq:
+  label: enthalpy of formation, H3PO4 aq
+s_h3po4_aq:
+  label: standard entropy, H3PO4 aq
+solvation_po4_vs_li:
+  label: solvation free energy of PO4(3-) against Li+
+solvation_hpo4_vs_li:
+  label: solvation free energy of HPO4(2-) against Li+
+solvation_h2po4_vs_li:
+  label: solvation free energy of H2PO4(-) against Li+
+a_oh_range:
+  label: hydroxide activity range of the cell (design axis)
+a_w_cell:
+  label: water activity of the cell electrolyte (design axis)
+log10_ksp_el_alpo4:
+  label: solubility product in the electrolyte, AlPO4
+sigma_corr_alpo4:
+  label: ionic conductivity of the film, AlPO4
+rho_film_alpo4:
+  label: film density, AlPO4
+log10_ksp_el_al_pmeta3:
+  label: solubility product in the electrolyte, Al(PO3)3
+sigma_corr_al_pmeta3:
+  label: ionic conductivity of the film, Al(PO3)3
+rho_film_al_pmeta3:
+  label: film density, Al(PO3)3
+log10_ksp_el_al_borate:
+  label: solubility product in the electrolyte, Al borate
+sigma_corr_al_borate:
+  label: ionic conductivity of the film, Al borate
+rho_film_al_borate:
+  label: film density, Al borate
+log10_ksp_el_al_oxalate:
+  label: solubility product in the electrolyte, Al oxalate
+sigma_corr_al_oxalate:
+  label: ionic conductivity of the film, Al oxalate
+rho_film_al_oxalate:
+  label: film density, Al oxalate
+log10_ksp_el_al2o3:
+  label: solubility product in the electrolyte, Al2O3
+sigma_corr_al2o3:
+  label: ionic conductivity of the film, Al2O3
+rho_film_al2o3:
+  label: film density, Al2O3
+dv_film:
+  label: relative volume change of the Al-salt film
+j_corr_max:
+  label: maximum tolerable Al-dissolution current density
+t_max_corr:
+  label: service time of the Al-dissolution criterion
+s_tol:
+  label: ranking tolerance of the ladder
+hydrolysis_polyp_k_ph6:
+  label: polyphosphate hydrolysis constant on Al2O3, pH 6
+hydrolysis_polyp_k_ph6_ca1mm:
+  label: polyphosphate hydrolysis constant on Al2O3, pH 6, 1 mM Ca2+
+hydrolysis_polyp_k_ph8:
+  label: polyphosphate hydrolysis constant on Al2O3, pH 8
+hydrolysis_polyp_k_ph8_ca1mm:
+  label: polyphosphate hydrolysis constant on Al2O3, pH 8, 1 mM Ca2+
+hydrolysis_polyp_half_life_ph6:
+  label: polyphosphate half-life on Al2O3, pH 6
+hydrolysis_polyp_half_life_ph6_ca1mm:
+  label: polyphosphate half-life on Al2O3, pH 6, 1 mM Ca2+
+hydrolysis_polyp_half_life_ph8:
+  label: polyphosphate half-life on Al2O3, pH 8
+hydrolysis_polyp_half_life_ph8_ca1mm:
+  label: polyphosphate half-life on Al2O3, pH 8, 1 mM Ca2+
+hydrolysis_ca_enhancement_ph6:
+  label: Ca2+ rate enhancement of polyphosphate hydrolysis, pH 6
+hydrolysis_ca_enhancement_ph8:
+  label: Ca2+ rate enhancement of polyphosphate hydrolysis, pH 8
+hydrolysis_pp_half_life_100c_ph10:
+  label: pyrophosphate half-life, 100 C, pH 10 (analog)
+hydrolysis_polyp_25c_literature_halflife:
+  label: polyphosphate half-life at 25 C against T, pH, Ca2+, Al oxide
+polyp_al_log_beta1_cyclo_p3:
+  label: Al3+ binding to cyclo-triphosphate (pH 3)
+polyp_al_log_beta1_cyclo_p4:
+  label: Al3+ binding to cyclo-tetraphosphate (pH 3)
+polyp_al_log_beta1_cyclo_p6:
+  label: Al3+ binding to cyclo-hexaphosphate (pH 3)
+polyp_al_log_beta1_cyclo_p8:
+  label: Al3+ binding to cyclo-octaphosphate (pH 3)
+polyp_al_log_beta1_linear:
+  label: Al3+ binding to linear polyphosphate, pH 5 to 8.5
+polyp_chain_length_material:
+  label: average polyphosphate chain length of the studied material
+polyp_chain_distribution:
+  label: polyphosphate chain-length distribution
+polyp_log10_ksp_cameta:
+  label: solubility product, Ca polyphosphate
+polyp_log10_ksp_al:
+  label: solubility product, Al polyphosphate
+polyp_al_speciation_ph5_85:
+  label: Al3+ speciation, pH 5 to 8.5 (computed)
+coacervate_ca_threshold:
+  label: Ca2+ at which Na-polyP coacervates
+coacervate_pH_window:
+  label: pH window of Ca-polyP coacervate
+coacervate_onset_volume:
+  label: CaCl2 volume at coacervate onset
+coacervate_ca_to_polyp_ratio:
+  label: Ca to polyP molar ratio of the preparation
+coacervate_viscosity:
+  label: Ca-polyP coacervate viscosity
+coacervate_gamma_nl:
+  label: Ca-polyP coacervate-water interfacial tension
+coacervate_gamma_analog:
+  label: polyelectrolyte coacervate-water tension (analog)
+matrix_chitosan_pka:
+  label: pKa of chitosan amino groups
+matrix_chitosan_polyp_complex:
+  label: chitosan-polyphosphate binding
+matrix_oxidation_onset_chitosan:
+  label: oxidation onset of chitosan film
+matrix_oxidation_onset_pda:
+  label: oxidation onset of polydopamine film
+glass_dfh_cameta_glass:
+  label: enthalpy of formation, Ca(PO3)2 glass
+glass_dfh_lipo3_glass:
+  label: enthalpy of formation, LiPO3 glass
+glass_dfh_lipo3_crystal:
+  label: enthalpy of formation, LiPO3 crystal
+glass_crystal_correction_lipo3:
+  label: glass-to-crystal correction, LiPO3
+glass_dfh_napo3_glass:
+  label: enthalpy of formation, NaPO3 glass
+glass_dfh_napo3_crystal:
+  label: enthalpy of formation, NaPO3 crystal
+glass_crystal_correction_napo3:
+  label: glass-to-crystal correction, NaPO3
+glass_dfh_kpo3_glass:
+  label: enthalpy of formation, KPO3 glass
+glass_s0_cameta_glass:
+  label: entropy, Ca(PO3)2 glass
+glass_crystal_correction_cameta:
+  label: glass-to-crystal correction, Ca(PO3)2
+glass_dfh_alpmeta3_glass:
+  label: enthalpy of formation, Al(PO3)3 glass
+glass_s0_alpmeta3_glass:
+  label: entropy, Al(PO3)3 glass
+glass_crystal_correction_alpmeta3:
+  label: glass-to-crystal correction, Al(PO3)3
+matrix_baseline_hq_film_thickness:
+  label: film thickness, lithium polyphosphate coating (comparator)
+matrix_baseline_tsinghua_film_thickness:
+  label: film thickness, baked aluminophosphate film (comparator)
+hydration_free_energy_al_marcus:
+  label: hydration free energy of Al3+, Marcus scale (full-text reading)
+hydration_free_energy_al_tissandier_scale:
+  label: hydration free energy of Al3+, cluster-pair proton scale
+hydration_free_energy_proton_tissandier:
+  label: hydration free energy of the proton, cluster-pair value
+hydration_free_energy_li_conventional:
+  label: conventional hydration free energy of Li+ (proton zero)
+hydration_free_energy_li_tissandier_scale:
+  label: hydration free energy of Li+, cluster-pair proton scale
+hydration_standard_state_offset:
+  label: offset between the two hydration standard states
+hydration_free_energy_clo4:
+  label: hydration free energy of ClO4-
+transfer_free_energy_clo4_water_pc:
+  label: transfer free energy of ClO4-, water to PC
+transfer_free_energy_ca_water_pc:
+  label: transfer free energy of Ca2+, water to PC
+transfer_free_energy_al_water_pc:
+  label: transfer free energy of Al3+, water to PC
+glass_dfh_cameta_crystal:
+  label: enthalpy of formation, Ca(PO3)2 crystal (assessed)
+glass_s_cameta_crystal:
+  label: standard entropy, Ca(PO3)2 crystal (assessed)
+glass_crystal_correction_cameta_calphad:
+  label: glass-to-crystal correction, Ca(PO3)2 (assessed crystal)
+conversion_brushite_monetite_onset:
+  label: brushite to monetite, onset temperature
+conversion_brushite_dehydration_range:
+  label: brushite dehydration, temperature range
+conversion_monetite_pyrophosphate_onset:
+  label: monetite to pyrophosphate, onset temperature
+conversion_pyrophosphate_gamma_beta:
+  label: gamma to beta pyrophosphate, DTA temperature
+hydrolysis_polyp_k_ph7_to_13:
+  label: polyphosphate hydrolysis constant, pH 7 to 13
+hydrolysis_tetrameta_ph_min_rate:
+  label: pH of minimum tetrametaphosphate hydrolysis
+coacervate_gamma_analog_complex_pair:
+  label: PAA-qPDMAEMA coacervate-dilute tension (analog)
+transfer_free_energy_na_water_pc:
+  label: Na+ Gibbs energy of transfer, water to propylene carbonate (TATB scale)
+transfer_free_energy_k_water_pc:
+  label: K+ Gibbs energy of transfer, water to propylene carbonate (TATB scale)
+transfer_free_energy_rb_water_pc:
+  label: Rb+ Gibbs energy of transfer, water to propylene carbonate (TATB scale)
+transfer_free_energy_cs_water_pc:
+  label: Cs+ Gibbs energy of transfer, water to propylene carbonate (TATB scale)
+transfer_multi_cu2_water_pc:
+  label: Cu2+ Gibbs energy of transfer, water to pc
+transfer_multi_hg2_water_pc:
+  label: Hg2+ Gibbs energy of transfer, water to pc
+transfer_multi_cu2_water_acetonitrile:
+  label: Cu2+ Gibbs energy of transfer, water to acetonitrile
+transfer_multi_cu2_water_dmf:
+  label: Cu2+ Gibbs energy of transfer, water to dmf
+transfer_multi_cu2_water_dmso:
+  label: Cu2+ Gibbs energy of transfer, water to dmso
+transfer_multi_cu2_water_methanol:
+  label: Cu2+ Gibbs energy of transfer, water to methanol
+transfer_multi_zn2_water_dmso:
+  label: Zn2+ Gibbs energy of transfer, water to dmso
+transfer_multi_cd2_water_dmso:
+  label: Cd2+ Gibbs energy of transfer, water to dmso
+transfer_multi_hg2_water_acetonitrile:
+  label: Hg2+ Gibbs energy of transfer, water to acetonitrile
+transfer_multi_hg2_water_dmso:
+  label: Hg2+ Gibbs energy of transfer, water to dmso
+transfer_multi_la3_water_methanol:
+  label: La3+ Gibbs energy of transfer, water to methanol
+transfer_multi_ca2_water_acetonitrile_rb_ref:
+  label: Ca2+ Gibbs energy of transfer, water to acetonitrile rb ref
+transfer_multi_ca2_water_acetonitrile_extrapolation:
+  label: Ca2+ Gibbs energy of transfer, water to acetonitrile extrapolation
+transfer_multi_ca2_water_acetonitrile_real_potentials:
+  label: Ca2+ Gibbs energy of transfer, water to acetonitrile real potentials
+transfer_multi_la3_water_acetonitrile:
+  label: La3+ Gibbs energy of transfer, water to acetonitrile
+transfer_multi_mg2_water_pc:
+  label: Mg2+ Gibbs energy of transfer, water to pc
+transfer_multi_zn2_water_pc:
+  label: Zn2+ Gibbs energy of transfer, water to pc
+transfer_multi_ba2_water_pc:
+  label: Ba2+ Gibbs energy of transfer, water to pc
+dfg_aq_li:
+  label: conventional aqueous Gibbs energy of formation of Li+
+s_aq_li:
+  label: conventional aqueous ionic entropy of Li+
+dfg_aq_ca2:
+  label: conventional aqueous Gibbs energy of formation of Ca2+
+s_aq_ca2:
+  label: conventional aqueous ionic entropy of Ca2+
+dfg_aq_al3:
+  label: conventional aqueous Gibbs energy of formation of Al3+
+s_aq_al3:
+  label: conventional aqueous ionic entropy of Al3+
+dfg_aq_clo4:
+  label: conventional aqueous Gibbs energy of formation of ClO4-
+s_aq_clo4:
+  label: conventional aqueous ionic entropy of ClO4-
+exchange_entropy_al_aq_proxy:
+  label: aqueous exchange entropy proxy, 3 Li+ for Al3+
+exchange_entropy_al_crystal_bound:
+  label: exchange entropy bound, Al(ClO4)3 against 3 LiClO4 (gap)
+s0_cameta_glass:
+  label: Ca(PO3)2 glass standard entropy
+h_cryst_cameta_glass:
+  label: Ca(PO3)2 glass crystallisation enthalpy
+dfh_al_pometa3:
+  label: Al(PO3)3 enthalpy of formation
+dfg_al_pometa3:
+  label: Al(PO3)3 Gibbs energy of formation
+s_al_pometa3:
+  label: Al(PO3)3 standard entropy
+polyp_al_log_beta1_linear_chain_unit_w15:
+  label: log10 stability constant, Al3+ with a linear polyphosphate chain unit (1:1)
+polyp_ads_alumina_gamma_max:
+  label: polyphosphate monolayer capacity on alumina
+polyp_ads_alumina_k_langmuir:
+  label: polyphosphate Langmuir constant on alumina
+polyp_ads_alumina_layer_thickness:
+  label: adsorbed polyphosphate layer thickness on alumina
+log10_ksp_aragonite_25c_i0:
+  label: log10 solubility product of aragonite, 25 C, zero ionic strength
+log10_ksp_brushite:
+  label: solubility product, brushite
+log10_ksp_atcp:
+  label: solubility product, alpha-TCP
+log10_ksp_li3po4:
+  label: solubility product, Li3PO4 (concentration basis)
+log10_ksp_ocp_ca4h_basis:
+  label: solubility product, OCP per Ca4H(PO4)3
+p_c_site_square:
+  label: site percolation threshold, square lattice
+p_c_site_triangular:
+  label: site percolation threshold, triangular lattice
+p_c_site_sc:
+  label: site percolation threshold, simple cubic lattice
+ph_additive_h3po4_dose_wt_active:
+  label: H3PO4 dose as pH controller, mass fraction of active material
+ph_additive_h3po4_dose_wt_total_solids:
+  label: H3PO4 dose as pH controller, mass fraction of total electrode material
+ph_additive_h3po4_dose_mol_per_kg_active:
+  label: H3PO4 dose as pH controller, amount per mass of NMC811
+ph_additive_h3po4_solution_mass_per_g_active:
+  label: mass of 1 M H3PO4 solution per mass of NMC811
+p_total_slurry_h3po4_window:
+  label: total phosphate in the slurry liquid, H3PO4-dosed window
+liclo4_solubility_pc:
+  label: saturation concentration of LiClO4 in propylene carbonate
+liclo4_gamma_pc:
+  label: mean ionic activity coefficient of LiClO4 in propylene carbonate
+liclo4_ka_pc_25c:
+  label: ion-pair association constant of LiClO4 in propylene carbonate at 298.15 K

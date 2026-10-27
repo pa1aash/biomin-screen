@@ -1,0 +1,230 @@
+# Parameter-table key to contract v6 symbol bindings. Applied by src/biomin_screen/physics/bindings.py.
+# sha256 of this file with this line removed: c1bf7d5f9122b0a28be2ce0ddf8f12f29c7b8a48f2e8d47b7285ef343beb52fe
+# Status: resolved = unit and kind established from the key record; unresolved = ambiguous, the key yields
+# "undetermined" (default). A gap key (no value) is undetermined at run time whatever its binding status.
+# No prior, threshold, verdict rule or K1 number is set or changed here.
+version: 3
+contract_version: 6
+contract_unit_note: units are SI as in data/symbols.yaml
+undetermined_default: {status: undetermined, value: null}
+bindings:
+  - id: b01
+    contract_symbol: beta_AlPP
+    contract_unit: '1'
+    w1_symbol: K_Al_polyP
+    w1_unit: '1 (transform none in the table; the value is log10 beta1)'
+    conversion:
+      name: log10_to_linear
+      formula: beta_AlPP = 10^x
+      base: 10
+      standard_state: molal activity scale, m° = 1 mol kg^-1 (symbols.yaml m_std), dimensionless
+    status: unresolved
+    reason: the five keys do not establish the contract's quantity (1:1 Al3+ chain-unit complex, activities, pH 5 to 8.5)
+    decision: 'stays unresolved. The cyclic constants at pH 3 are never bound as a proxy for the linear chain-unit constant at pH 5 to 8.5; R1 stays undetermined.'
+    proxy_forbidden: true
+    indicative_input: {allowed: true, gates: false, note: 'a constant computed by the selectivity calculation may be supplied later as an indicative input only; it never gates a verdict and is never an ok binding'}
+    default: {status: undetermined, value: null, note: 'the contract rule for a gap (beta_AlPP = 0, flagged) is applied by the contract evaluator, not here'}
+    keys:
+      polyp_al_log_beta1_cyclo_p3: &cyclo {status: unresolved, reason: 'cyclic trimetaphosphate at pH 3 (Kura 2007), never a proxy for the linear chain-unit constant at pH 5 to 8.5; ionic strength and concentration-versus-activity basis not recorded'}
+      polyp_al_log_beta1_cyclo_p4: *cyclo
+      polyp_al_log_beta1_cyclo_p6: *cyclo
+      polyp_al_log_beta1_cyclo_p8: *cyclo
+      polyp_al_log_beta1_linear: {status: resolved, reason: 'gap in the table; the conversion is defined for when a linear-chain value exists'}
+      polyp_al_log_beta1_linear_chain_unit_w15: {status: resolved, reason: 'gap in the table (no admitted row); same quantity and conversion as polyp_al_log_beta1_linear, undetermined at run time while the value is a gap'}
+  - id: b02
+    contract_symbol: K_sp_AlPP
+    contract_unit: '1'
+    w1_symbol: K_sp
+    w1_unit: '1, transform log10'
+    conversion:
+      name: log10_to_linear
+      formula: K_sp_AlPP = 10^x per formula unit Al(PO3)3 (nu_Al = 1, nu_PP = 3, as IAP_AlPP)
+      base: 10
+      standard_state: molal activity scale, m° = 1 mol kg^-1
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      polyp_log10_ksp_al: {status: resolved, reason: 'gap in the table: the Omega_AlPP row is undetermined with its flip (contract)'}
+  - id: b03
+    contract_symbol: gamma_nl_c
+    contract_unit: J m^-2
+    w1_symbol: gamma_nl
+    w1_unit: J m^-2
+    conversion: {name: identity, formula: gamma_nl_c = x, note: 'the table and the contract are both J m^-2; calcite and other mineral gamma_nl_* keys are a different symbol and are not bound here'}
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      coacervate_gamma_nl: {status: resolved, role: primary, reason: 'gap in the table'}
+      coacervate_gamma_analog: {status: resolved, role: analog, reason: 'synthetic PDADMAC/PANa coacervate; analog route only, never a substitute for the primary key'}
+      coacervate_gamma_analog_complex_pair: {status: resolved, role: analog, reason: 'synthetic polyelectrolyte pair; analog route only'}
+  - id: b04
+    contract_symbol: Delta_G_gc
+    contract_unit: J mol^-1
+    w1_symbol: H_phase
+    w1_unit: 'J mol^-1 (enthalpy, glass minus crystal, per formula unit)'
+    conversion:
+      name: enthalpy_plus_entropy_bound
+      formula: 'Delta_G_gc = H_phase - T S_resid, S_resid in [0, n_PO3 R ln 2] J K^-1 mol^-1'
+      inputs: [H_phase (the key), S_resid (second named input, required), T (default 298.15 K)]
+      rule: 'specified entropy rule, PO3 residual entropy in [0, R ln 2] per PO3 (labelled assumption, no source); S_resid at the upper end for E_ub, 0 for E_lb; the enthalpy is never read as a free energy'
+      check: 'result must lie in [0, oo); a negative result is undetermined, not clamped'
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      glass_crystal_correction_lipo3: {status: resolved, n_PO3: 1, formula_unit: LiPO3}
+      glass_crystal_correction_napo3: {status: resolved, n_PO3: 1, formula_unit: NaPO3}
+      glass_crystal_correction_cameta: {status: resolved, n_PO3: 2, formula_unit: Ca(PO3)2, reason: 'gap in the table'}
+      glass_crystal_correction_cameta_calphad: {status: resolved, n_PO3: 2, formula_unit: Ca(PO3)2}
+      glass_crystal_correction_alpmeta3: {status: resolved, n_PO3: 3, formula_unit: Al(PO3)3, reason: 'gap in the table'}
+  - id: b05
+    contract_symbol: k_hyd
+    contract_unit: s^-1
+    w1_symbol: k_hyd (k_hydrolysis for the pH 7 to 13 key)
+    w1_unit: s^-1
+    conversion: {name: identity, formula: k_hyd = x, note: 'the rate constant at the data condition; the transfer to the process state is tau_k in k_hyd_eff, not here'}
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      hydrolysis_polyp_k_ph6: {status: resolved}
+      hydrolysis_polyp_k_ph6_ca1mm: {status: resolved}
+      hydrolysis_polyp_k_ph8: {status: resolved}
+      hydrolysis_polyp_k_ph8_ca1mm: {status: resolved}
+      hydrolysis_polyp_k_ph7_to_13: {status: resolved, reason: 'gap in the table; the table symbol name k_hydrolysis differs from k_hyd, unit s^-1 identical'}
+  - id: b06
+    contract_symbol: Delta_G_tr_rel
+    contract_unit: J mol^-1
+    w1_symbol: Delta_G_tr
+    w1_unit: J mol^-1
+    conversion:
+      name: single_ion_transfer
+      formula: 'DG_tr_rel = DG_tr(M^z+) - z DG_tr(Li+), computed within ONE method so that the scale cancels (form B: DG_tr(M(ClO4)z) - z DG_tr(LiClO4) from salt values)'
+      rule: 'benchmark values are single-ion values on one stated scale (form A) or salt-form values (form B); one scale and one solvent across keys and sources; a mixed-scale or unnamed-scale input makes the binding unusable (undetermined), never converted'
+      solvent: propylene carbonate (proxy of the carbonate class)
+      premise: 'DG_tr_rel >= 0 makes E_lb a lower bound (contract E_solv); a negative value is returned as is, and the premise is then violated'
+    status: resolved
+    decision: 'bind the relative quantity DG_tr_rel, not absolute transfer energies'
+    default: {status: undetermined, value: null}
+    keys:
+      transfer_free_energy_li_water_pc: {status: resolved, ion: Li+, form: A, solvent: PC, scale: TATB, source: marcus1983_pac55_977, role: reference_ion, note: 'declared on the TATB scale: the evidence row TI-077 is the IUPAC selected value of Marcus 1983, a tetraphenylarsonium tetraphenylborate-type assumption, mol dm^-3 scale; the same compilation and scale as the alkali keys below'}
+      transfer_free_energy_ca_water_pc: {status: resolved, ion: Ca2+, form: A, solvent: PC, scale: TATB, source: marcus1983_pac55_977, role: target_ion, note: 'gap in the table (no value on any scale); the scale a value must carry to enter DG_tr_rel is TATB, undetermined at run time while it is a gap'}
+      transfer_free_energy_al_water_pc: {status: resolved, ion: Al3+, form: A, solvent: PC, scale: TATB, source: marcus1983_pac55_977, role: target_ion, note: 'gap in the table (no value on any scale); the scale a value must carry to enter DG_tr_rel is TATB, undetermined at run time while it is a gap'}
+      transfer_free_energy_na_water_pc: &alk {status: resolved, ion: Na+, form: A, solvent: PC, scale: TATB, source: marcus1983_pac55_977, role: alkali_single_ion, note: 'Marcus 1983 selected value, tetraphenylarsonium tetraphenylborate scale; DG_tr_rel = DG_tr(M+) - DG_tr(Li+) on the same scale, solvent and source'}
+      transfer_free_energy_k_water_pc: {<<: *alk, ion: K+}
+      transfer_free_energy_rb_water_pc: {<<: *alk, ion: Rb+}
+      transfer_free_energy_cs_water_pc: {<<: *alk, ion: Cs+}
+      transfer_free_energy_clo4_water_pc: {status: resolved, ion: ClO4-, form: A, solvent: PC, scale: ferrocene, source: marcus1983_pac55_977, role: anion_cancels, note: 'other scale (ferrocene, anions adjusted by -10.0 kJ mol^-1 in the source): converted by no rule, so it is never combined with a TATB cation in form A (a scale mismatch is undetermined); it cancels only in a salt-form (form B) assembly with the same anion on both sides'}
+  - id: b07
+    contract_symbol: G_phase
+    contract_unit: J mol^-1
+    w1_symbol: G_phase
+    w1_unit: J mol^-1
+    conversion:
+      name: aqueous_formation_energy
+      formula: 'E_lb = Delta_G_r_aq/(Delta_n_Li F) from the conventional aqueous standard Gibbs energies of formation (keys dfg_*_aq), one scale; E_PC = E_aq + DG_tr_rel/(n F), E_aq a lower bound of E_PC iff DG_tr_rel >= 0'
+      scale: conventional_aq_standard
+      scale_note: 'conventional aqueous standard state, m = 1, 298.15 K, H+ = 0 convention (cancels in a charge-balanced combination); one scale, never mixed or converted'
+      uncertainty: 'per key: tabulated (normal or uniform range in data/params.yaml) or none (a fixed point value: no width is sourced)'
+      rule: 'E_lb uses only these keys; absolute hydration free energies are never an input of E_lb (the keys dfg_aq_* of the decision are the table keys dfg_*_aq)'
+    status: resolved
+    decision: 'E_lb binds the dfg_*_aq keys; the hydration keys and the Tissandier offset remain for a labelled Born-model comparison only'
+    default: {status: undetermined, value: null}
+    keys:
+      dfg_ca2_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_co3_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_hco3_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_co2_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_al3_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_al_oh4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      dfg_li_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      dfg_liclo4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      dfg_po4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: tabulated}
+      dfg_hpo4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      dfg_h2po4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      dfg_h3po4_aq: {status: resolved, symbol: G_phase, scale: conventional_aq_standard, role: e_lb_input, uncertainty: none}
+      hydration_free_energy_li: {status: resolved, symbol: Delta_G_hyd, scale: marcus1991, role: born_comparison_only}
+      hydration_free_energy_ca: {status: resolved, symbol: Delta_G_hyd, scale: marcus1991, role: born_comparison_only}
+      hydration_free_energy_al: {status: resolved, symbol: Delta_G_hyd, scale: marcus1991, role: born_comparison_only}
+      hydration_free_energy_al_marcus: {status: resolved, symbol: Delta_G_hyd, scale: marcus1991, role: born_comparison_only, note: 'standard state not printed in the source'}
+      hydration_free_energy_al_tissandier_scale: {status: resolved, symbol: Delta_G_hyd, scale: tissandier, role: born_comparison_only}
+      hydration_free_energy_proton_tissandier: {status: resolved, symbol: Delta_G_hyd, scale: tissandier, role: born_comparison_only}
+      hydration_free_energy_li_conventional: {status: resolved, symbol: Delta_G_hyd, scale: conventional, role: born_comparison_only}
+      hydration_free_energy_li_tissandier_scale: {status: resolved, symbol: Delta_G_hyd, scale: tissandier, role: born_comparison_only}
+      dg_hyd_ca_marcus: {status: resolved, symbol: Delta_G_hyd, scale: marcus1991, role: born_comparison_only}
+      dg_hyd_ca_tissandier: {status: resolved, symbol: Delta_G_hyd, scale: tissandier, role: born_comparison_only}
+      hydration_free_energy_clo4: {status: unresolved, symbol: Delta_G_hyd, role: born_comparison_only, scale: null, reason: 'scale not named; gap'}
+  - id: b08
+    contract_symbol: none
+    contract_unit: V
+    w1_symbol: m_E, m_expt
+    w1_unit: V
+    conversion: {name: carbonate_control_only, formula: 'none: unbound from every phosphate row', note: 'the window_margin keys belong to the fixed carbonate control; phosphate K1 margins are the derived m_K1 of the thresholds block (thresholds.K1.margin_expt, margin_dft)'}
+    status: unresolved
+    reason: 'fixed carbonate control only; unbound from every phosphate row'
+    decision: 'unbind from every phosphate row'
+    carbonate_control_only: true
+    default: {status: undetermined, value: null}
+    keys:
+      window_margin: {status: unresolved, scope: carbonate_control, reason: 'carbonate DFT margin; fixed carbonate control only'}
+      window_margin_expt: {status: unresolved, scope: carbonate_control, reason: 'carbonate expt budget; fixed carbonate control only'}
+      window_margin_expt_red_caco3: {status: unresolved, scope: carbonate_control, reason: 'carbonate reduction-limit budget; fixed carbonate control only'}
+      window_margin_expt_red_corundum: {status: unresolved, scope: carbonate_control, reason: 'corundum reduction-limit budget; fixed carbonate control only'}
+  - id: b09
+    contract_symbol: 'Gamma_P (mol m^-2), K_P (1), delta_P (m)'
+    contract_unit: 'mol m^-2; 1; m'
+    w1_symbol: none
+    w1_unit: absent
+    conversion:
+      name: ads_unit
+      formula: 'Gamma_P = x mol m^-2 (mmol, umol, nmol m^-2 scaled; a mass density needs the chain-unit molar mass as an argument); K_P = K c0 with c0 = 1 mol dm^-3 (molar, dimensionless), activity-based; delta_P = x m (mm, um, nm, angstrom scaled)'
+      k_p_rule: 'K per litre (dm^3 mol^-1, L mol^-1, M^-1, m^3 mol^-1 x 1000, cm^3 mol^-1 x 0.001): K_P = K[dm^3 mol^-1] c0. K molal (kg mol^-1, or dimensionless on m° = 1 mol kg^-1): K_P = K c0 / rho_w, rho_w in kg dm^-3 (c = rho_w m, dilute aqueous solution), the water density supplied by the caller. A concentration quotient (basis other than activity), an unlabelled dimensionless K and an unknown unit are undetermined, never copied'
+      note: the caller states the unit; an unknown unit is undetermined
+    status: unresolved
+    reason: 'the three keys are gaps (no value, no source); Gamma_P and delta_P stay unresolved while they are gap keys; the K_P conversion is stated (K c0, c0 = 1 mol dm^-3) and the key resolves, undetermined at run time while it is a gap'
+    decision: 'stays unresolved until the keys exist with units, source and pin'
+    default: {status: undetermined, value: null}
+    keys:
+      polyp_ads_alumina_gamma_max: {status: unresolved, symbol: Gamma_P, unit: mol m^-2, reason: 'gap key in data/params.yaml (no isotherm found, no value); stays unresolved while it is a gap'}
+      polyp_ads_alumina_k_langmuir: {status: resolved, symbol: K_P, unit: 'm^3 mol^-1', reason: 'gap key in data/params.yaml (no isotherm, no value): undetermined at run time; the table unit m^3 mol^-1 is converted by K_P = 1000 K c0 (activity basis required), never copied'}
+      polyp_ads_alumina_layer_thickness: {status: unresolved, symbol: delta_P, unit: m, reason: 'gap key in data/params.yaml (no value); stays unresolved while it is a gap'}
+  - id: b10
+    contract_symbol: none
+    contract_unit: null
+    w1_symbol: n_chain
+    w1_unit: '1'
+    conversion: {name: slot, formula: none, note: 'matrix or route slot only; not used in any barrier or K1 formula'}
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      polyp_chain_length_material: {status: resolved, role: slot}
+      polyp_chain_distribution: {status: resolved, role: slot}
+  - id: b11
+    contract_symbol: none
+    contract_unit: null
+    w1_symbol: K_complex
+    w1_unit: '1'
+    conversion: {name: slot, formula: none, note: 'matrix slot only; not used in any barrier or K1 formula'}
+    status: resolved
+    default: {status: undetermined, value: null}
+    keys:
+      matrix_chitosan_polyp_complex: {status: resolved, role: slot}
+not_bound:
+  polyp_log10_ksp_cameta: 'Ca polyphosphate solubility product: no contract symbol (K_sp_AlPP only); gap'
+  hydration_standard_state_offset: 'definitional shift between conventions (the Tissandier offset); never applied, because scales are not converted; kept for the labelled Born-model comparison only'
+  transfer_multi_cu2_water_pc: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_hg2_water_pc: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_cu2_water_acetonitrile: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_cu2_water_dmf: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_cu2_water_dmso: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_cu2_water_methanol: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_zn2_water_dmso: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_cd2_water_dmso: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_hg2_water_acetonitrile: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_hg2_water_dmso: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_la3_water_methanol: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_ca2_water_acetonitrile_rb_ref: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_ca2_water_acetonitrile_extrapolation: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_ca2_water_acetonitrile_real_potentials: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_la3_water_acetonitrile: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_mg2_water_pc: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_zn2_water_pc: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'
+  transfer_multi_ba2_water_pc: 'excluded: not a benchmark ion of DG_tr_rel; the scale is the one named in its row, not TATB, and no conversion rule between single-ion scales is specified, so it never enters a DG_tr_rel (comparison only)'

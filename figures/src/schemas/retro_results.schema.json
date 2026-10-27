@@ -1,0 +1,326 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "retro-results/v1",
+ "title": "Retrodiction result record, machine-readable transcription for the retrodiction figure",
+ "$comment": "Source: data/retrodiction/SCHEMA.md section 5. The record is defined there in prose and a JSON example; `properties` transcribes the example field for field, adding only the constraints the prose states (verdict values, relation values, 90 % interval as q05..q95). Further fields are additive, so the objects admit them; the additive fields the figure reads (the per-case interface, the summary's swap check and permutation null) are constrained by the $defs *_figure_reads entries. tests/figs/test_fig_schemas.py checks that the `properties` sets equal the example's.",
+ "type": "object",
+ "additionalProperties": true,
+ "required": [
+  "schema",
+  "mock",
+  "cases_sha256",
+  "criterion_sha256",
+  "provenance",
+  "draws",
+  "seed",
+  "cases",
+  "summary"
+ ],
+ "properties": {
+  "schema": {
+   "const": "retro-results/v1"
+  },
+  "mock": {
+   "type": "boolean"
+  },
+  "cases_sha256": {
+   "type": "string",
+   "pattern": "^sha256:[0-9a-f]{64}$"
+  },
+  "criterion_sha256": {
+   "type": "string",
+   "pattern": "^sha256:[0-9a-f]{64}$"
+  },
+  "provenance": {
+   "type": "object",
+   "additionalProperties": true,
+   "required": [
+    "git_sha",
+    "git_dirty",
+    "params_file_hash"
+   ],
+   "properties": {
+    "git_sha": {
+     "type": "string",
+     "pattern": "^[0-9A-Za-z._-]+$"
+    },
+    "git_dirty": {
+     "type": "boolean"
+    },
+    "params_file_hash": {
+     "type": "string",
+     "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "cases_sha256": {
+     "type": "string"
+    },
+    "criterion_sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "draws": {
+   "type": "integer",
+   "minimum": 1
+  },
+  "seed": {
+   "type": "integer",
+   "minimum": 0
+  },
+  "cases": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "$ref": "#/$defs/case"
+   }
+  },
+  "summary": {
+   "type": "object",
+   "additionalProperties": true,
+   "required": [
+    "N",
+    "correct",
+    "incorrect",
+    "inconclusive",
+    "undetermined",
+    "k",
+    "chance_probability",
+    "pass"
+   ],
+   "properties": {
+    "N": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "correct": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "incorrect": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "inconclusive": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "k": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "chance_probability": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "pass": {
+     "type": "boolean"
+    },
+    "undetermined": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "allOf": [
+    {
+     "$ref": "#/$defs/summary_figure_reads"
+    }
+   ]
+  }
+ },
+ "$defs": {
+  "interval": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "median",
+    "q05",
+    "q95"
+   ],
+   "description": "Median and 5 % / 95 % quantiles over the Monte Carlo draws, in units of k_B T.",
+   "properties": {
+    "median": {
+     "type": "number"
+    },
+    "q05": {
+     "type": "number"
+    },
+    "q95": {
+     "type": "number"
+    }
+   }
+  },
+  "case": {
+   "type": "object",
+   "additionalProperties": true,
+   "required": [
+    "id",
+    "label",
+    "termination",
+    "negative",
+    "observed_relation",
+    "barrier_test",
+    "barrier_reference",
+    "delta",
+    "p_test_higher",
+    "boundary_mass",
+    "verdict"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "pattern": "^RC[0-9]{2}$"
+    },
+    "label": {
+     "type": "string",
+     "minLength": 1
+    },
+    "termination": {
+     "enum": [
+      "carboxyl",
+      "hydroxyl",
+      "methyl",
+      "amine",
+      "catechol",
+      "thiol",
+      "phosphate",
+      "mixed",
+      "polysaccharide",
+      "peptoid",
+      "metal",
+      "mineral"
+     ]
+    },
+    "negative": {
+     "type": "boolean"
+    },
+    "observed_relation": {
+     "enum": [
+      "test_higher_barrier",
+      "test_lower_barrier"
+     ]
+    },
+    "barrier_test": {
+     "$ref": "#/$defs/interval"
+    },
+    "barrier_reference": {
+     "$ref": "#/$defs/interval"
+    },
+    "delta": {
+     "$ref": "#/$defs/interval",
+     "description": "barrier_test - barrier_reference per draw."
+    },
+    "p_test_higher": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "boundary_mass": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "verdict": {
+     "enum": [
+      "correct",
+      "incorrect",
+      "inconclusive",
+      "undetermined"
+     ]
+    }
+   },
+   "allOf": [
+    {
+     "$ref": "#/$defs/case_figure_reads"
+    }
+   ]
+  },
+  "case_figure_reads": {
+   "description": "Additive per-case field the figure groups by: the interface the case's inputs act on (SCHEMA.md section 3.4 and 4).",
+   "required": [
+    "interface"
+   ],
+   "properties": {
+    "interface": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "null_distribution": {
+   "type": "object",
+   "required": [
+    "n_perm",
+    "median",
+    "range95",
+    "counts"
+   ],
+   "description": "Permutation null of the number of correct cases (criterion.md section 4.5): counts[k] permutations gave k correct, k = 0..N.",
+   "properties": {
+    "n_perm": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "median": {
+     "type": "number"
+    },
+    "range95": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     },
+     "minItems": 2,
+     "maxItems": 2
+    },
+    "counts": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "minItems": 1
+    },
+    "fraction_ge_observed": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    }
+   }
+  },
+  "summary_figure_reads": {
+   "description": "Additive summary fields the figure reads: the label-swap check and the permutation null (panel b).",
+   "required": [
+    "swap_check",
+    "permutation_null"
+   ],
+   "properties": {
+    "swap_check": {
+     "type": "object",
+     "required": [
+      "holds"
+     ],
+     "properties": {
+      "holds": {
+       "type": "boolean"
+      }
+     }
+    },
+    "permutation_null": {
+     "type": "object",
+     "required": [
+      "within_study",
+      "across_studies"
+     ],
+     "properties": {
+      "within_study": {
+       "$ref": "#/$defs/null_distribution"
+      },
+      "across_studies": {
+       "$ref": "#/$defs/null_distribution"
+      }
+     }
+    }
+   }
+  }
+ }
+}

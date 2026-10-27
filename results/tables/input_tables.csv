@@ -1,0 +1,98 @@
+table,group,cells
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, calcite",-8.48,fixed,fixed,C,10.1021/acsami.4c00434
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, aragonite",-8.34,-8.38 to -8.30,uniform,C,10.3133/ofr91183
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, ACC",-7.42,-7.54 to -5.51,uniform,B,"10.1073/pnas.1312369111, 10.1039/c8sc05634j, 10.3390/cryst11111318, 10.1126/science.1164271, 10.1002/adma.201303643, 10.1039/c8ce01596a"
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, hydroxyapatite",-56.02,-57.55 to -54.46,uniform,A,10.6028/jres.072a.052
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, ACP",-25.50,-28.30 to -23.90,uniform,D,10.1016/j.actbio.2010.02.017
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, beta-TCP",-28.87,-28.95 to -28.79,normal,A,10.1016/j.actbio.2008.06.010
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, alpha-TCP",-25.50,fixed,fixed,D,10.1016/j.actbio.2010.02.017
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, OCP",-48.40,-48.60 to -48.20,normal,A,10.6028/jres.093.153
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, OCP per Ca4H(PO4)3",-48.40,-48.60 to -48.20,normal,A,10.6028/jres.093.153
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, brushite",-6.59,-6.61 to -6.58,normal,A,10.6028/jres.074a.036
+parameters,"solubility products, log10 K_sp per formula unit","solubility product, Li3PO4 (concentration basis)",-8.89,-9.02 to -8.75,uniform,B,10.14232/phd.11352
+parameters,"acid constants (dissociation, pK)",first dissociation constant of carbonic acid,6.35,6.33 to 6.37,uniform,C,"10.1063/1.1416902, 10.3133/ofr91183"
+parameters,"acid constants (dissociation, pK)",second dissociation constant of carbonic acid,10.33,10.31 to 10.35,uniform,C,"10.1063/1.1416902, 10.3133/ofr91183"
+parameters,"acid constants (dissociation, pK)",first dissociation constant of H3PO4,2.13,2.13 to 2.15,uniform,C,"10.6028/jres.093.153, 10.6028/jres.105.030, 10.1016/j.actbio.2008.06.010"
+parameters,"acid constants (dissociation, pK)",second dissociation constant of H3PO4,7.20,7.20 to 7.21,uniform,C,"10.6028/jres.093.153, 10.6028/jres.105.030, 10.1016/j.actbio.2008.06.010"
+parameters,"acid constants (dissociation, pK)",third dissociation constant of H3PO4,12.35,12.32 to 12.39,uniform,C,"10.6028/jres.093.153, 10.6028/jres.105.030, 10.1016/j.actbio.2008.06.010"
+parameters,"acid constants (dissociation, pK)",ionic product of water (pKw),13.99,fixed,fixed,C,10.1016/j.actbio.2008.06.010
+benchmark,,brushite,crystalline,CaPH5O6 + 2 LiClO4 -> Ca(ClO4)2 + H3PO4 + H2O + 0.5 O2 + 2 Li,4.27 V,0.167 V,16.2 (outside the band)
+benchmark,,ACP (beta-TCP reference),crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.02 V,0.148 V,3.6 (benchmarked)
+benchmark,,HAp,crystalline,Ca5(PO4)3OH + 4 LiClO4 -> 1.5 Ca2P2O7 + 2 Ca(ClO4)2 + 0.5 H2O + O2 + 4 Li,4.07 V,0.124 V,4.7 (benchmarked)
+benchmark,,OCP,crystalline,undetermined: no tabulated data for OCP,--,--,unbenchmarked: no tabulated enthalpy
+benchmark,,beta-TCP,crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.02 V,0.148 V,3.6 (benchmarked)
+benchmark,,alpha-TCP,crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,3.98 V,0.165 V,4.8 (benchmarked)
+benchmark,,Li3PO4,crystalline,undetermined: no tabulated data for Li3PO4,--,--,3.7 (benchmarked)
+benchmark,,Ca2P2O7,crystalline,Ca2P2O7 + 2 LiClO4 -> Ca(PO3)2 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.45 V,0.231 V,6.2 (outside the band)
+benchmark,,Ca(PO3)2,crystal,Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li,4.98 V,0.190 V,unbenchmarked: no tabulated value
+benchmark,,Ca(PO3)2,glass,Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li,4.89 V,0.135 V,unbenchmarked: the tabulated phase is a glass
+benchmark,,AlPO4,crystalline,undetermined: incomplete uncertainty budget,--,--,11.3 (outside the band)
+benchmark,,Al(PO3)3,crystalline,undetermined: no tabulated data for Al(PO3)3,--,--,unbenchmarked: no tabulated value
+benchmark,,Al-polyphosphate gel,crystalline,undetermined: no tabulated data for Al(PO3)3,--,--,unbenchmarked: no tabulated value
+benchmark,,(LiPO3)n (baseline),crystal,LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li,5.02 V,0.120 V,9.8 (outside the band)
+benchmark,,(LiPO3)n (baseline),glass,LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li,4.98 V,0.248 V,unbenchmarked: the tabulated phase is a glass
+benchmark,,baked aluminophosphate (baseline),crystalline,undetermined: incomplete uncertainty budget,--,--,11.3 (outside the band)
+benchmark,,calcium carbonate (control),crystalline,CaCO3 + 2 LiClO4 -> Ca(ClO4)2 + CO2 + 0.5 O2 + 2 Li,3.94 V,0.087 V,unbenchmarked: no tabulated enthalpy
+reactions,,brushite,crystalline,CaPH5O6 + 2 LiClO4 -> Ca(ClO4)2 + 0.5 P2O5 + 2.5 H2O + 0.5 O2 + 2 Li,4.69 V,0.126 V,complete
+reactions,,brushite,crystalline,CaPH5O6 + LiClO4 -> 0.5 Ca(PO3)2 + 0.5 Ca(ClO4)2 + 2.5 H2O + 0.25 O2 + Li,4.41 V,0.279 V,complete
+reactions,,brushite,crystalline,CaPH5O6 + 2 LiClO4 -> Ca(ClO4)2 + H3PO4 + H2O + 0.5 O2 + 2 Li,4.27 V,0.167 V,complete
+reactions,,ACP (beta-TCP reference),crystalline,Ca3(PO4)2 + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li,4.48 V,0.088 V,complete
+reactions,,ACP (beta-TCP reference),crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.02 V,0.148 V,complete
+reactions,,HAp,crystalline,Ca5(PO4)3OH + 10 LiClO4 -> 5 Ca(ClO4)2 + 1.5 P2O5 + 0.5 H2O + 2.5 O2 + 10 Li,4.46 V,0.085 V,complete
+reactions,,HAp,crystalline,Ca5(PO4)3OH + 4 LiClO4 -> 1.5 Ca2P2O7 + 2 Ca(ClO4)2 + 0.5 H2O + O2 + 4 Li,4.07 V,0.124 V,complete
+reactions,,HAp,crystalline,Ca5(PO4)3OH + LiClO4 -> 1.5 Ca3(PO4)2 + 0.5 Ca(ClO4)2 + 0.5 H2O + 0.25 O2 + Li,4.20 V,0.209 V,complete
+reactions,,OCP,crystalline,Ca8P6H12O29 + 16 LiClO4 -> 8 Ca(ClO4)2 + 3 P2O5 + 6 H2O + 4 O2 + 16 Li,--,--,undetermined: no tabulated data for OCP
+reactions,,OCP,crystalline,Ca8P6H12O29 + 4 LiClO4 -> 3 Ca2P2O7 + 2 Ca(ClO4)2 + 6 H2O + O2 + 4 Li,--,--,undetermined: no tabulated data for OCP
+reactions,,beta-TCP,crystalline,Ca3(PO4)2 + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li,4.48 V,0.088 V,complete
+reactions,,beta-TCP,crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.02 V,0.148 V,complete
+reactions,,alpha-TCP,crystalline,Ca3(PO4)2 + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li,4.47 V,0.094 V,complete
+reactions,,alpha-TCP,crystalline,Ca3(PO4)2 + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li,3.98 V,0.165 V,complete
+reactions,,Li3PO4,crystalline,Li3PO4 -> 0.5 P2O5 + 0.75 O2 + 3 Li,--,--,undetermined: no tabulated data for Li3PO4
+reactions,,Li3PO4,crystalline,Li3PO4 -> 0.5 Li4P2O7 + 0.25 O2 + Li,--,--,"undetermined: no tabulated data for Li3PO4, Li4P2O7"
+reactions,,Ca2P2O7,crystalline,Ca2P2O7 + 4 LiClO4 -> 2 Ca(ClO4)2 + P2O5 + O2 + 4 Li,4.72 V,0.102 V,complete
+reactions,,Ca2P2O7,crystalline,Ca2P2O7 + 2 LiClO4 -> Ca(PO3)2 + Ca(ClO4)2 + 0.5 O2 + 2 Li,4.45 V,0.231 V,complete
+reactions,,Ca(PO3)2,crystal,Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li,4.98 V,0.190 V,complete
+reactions,,Ca(PO3)2,glass,Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li,4.89 V,0.135 V,complete
+reactions,,AlPO4,crystalline,AlPO4 + 3 LiClO4 -> Al(ClO4)3 + 0.5 P2O5 + 0.75 O2 + 3 Li,5.21 V,--,undetermined: incomplete uncertainty budget
+reactions,,AlPO4,crystalline,AlPO4 + 2 LiClO4 -> 0.3333 Al(PO3)3 + 0.6667 Al(ClO4)3 + 0.5 O2 + 2 Li,--,--,undetermined: no tabulated data for Al(PO3)3
+reactions,,Al(PO3)3,crystalline,Al(PO3)3 + 3 LiClO4 -> Al(ClO4)3 + 1.5 P2O5 + 0.75 O2 + 3 Li,--,--,undetermined: no tabulated data for Al(PO3)3
+reactions,,Al-polyphosphate gel,crystalline,Al(PO3)3 + 3 LiClO4 -> Al(ClO4)3 + 1.5 P2O5 + 0.75 O2 + 3 Li,--,--,undetermined: no tabulated data for Al(PO3)3
+reactions,,(LiPO3)n (baseline),crystal,LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li,5.02 V,0.120 V,complete
+reactions,,(LiPO3)n (baseline),glass,LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li,4.98 V,0.248 V,complete
+reactions,,baked aluminophosphate (baseline),crystalline,AlPO4 + 3 LiClO4 -> Al(ClO4)3 + 0.5 P2O5 + 0.75 O2 + 3 Li,5.21 V,--,undetermined: incomplete uncertainty budget
+reactions,,baked aluminophosphate (baseline),crystalline,AlPO4 + 2 LiClO4 -> 0.3333 Al(PO3)3 + 0.6667 Al(ClO4)3 + 0.5 O2 + 2 Li,--,--,undetermined: no tabulated data for Al(PO3)3
+reactions,,CaSiO3 (comparator),crystalline,CaSiO3 + 2 LiClO4 -> Ca(ClO4)2 + SiO2 + 0.5 O2 + 2 Li,3.72 V,--,undetermined: incomplete uncertainty budget
+reactions,,Ca2SiO4 (comparator),crystalline,Ca2SiO4 + 4 LiClO4 -> 2 Ca(ClO4)2 + SiO2 + O2 + 4 Li,3.59 V,--,undetermined: incomplete uncertainty budget
+reactions,,Ca2SiO4 (comparator),crystalline,Ca2SiO4 + 2 LiClO4 -> CaSiO3 + Ca(ClO4)2 + 0.5 O2 + 2 Li,3.46 V,0.094 V,complete
+reactions,,Li2SiO3 (comparator),crystalline,Li2SiO3 -> SiO2 + 0.5 O2 + 2 Li,3.63 V,--,undetermined: incomplete uncertainty budget
+reactions,,calcium carbonate (control),crystalline,CaCO3 + 2 LiClO4 -> Ca(ClO4)2 + CO2 + 0.5 O2 + 2 Li,3.94 V,0.087 V,complete
+dft,,P2O5,P2O5,-1504.9,-135.2,-19.3,outside the band
+dft,,H3PO4,H3PO4,--,--,--,unbenchmarked
+dft,,HAp,Ca5(PO4)3OH,-6738.5,-102.9,-4.7,benchmarked
+dft,,betalpha-TCP,Ca3(PO4)2,-4120.8,-46.8,-3.6,benchmarked
+dft,,alpha-TCP,Ca3(PO4)2,-4109.9,-61.9,-4.8,benchmarked
+dft,,OCP,Ca8P6H12O29,--,--,--,unbenchmarked
+dft,,brushite,CaPH5O6,-2403.6,-210.0,-16.1,outside the band
+dft,,monetite,CaHPO4,-1814.4,-77.1,-11.0,outside the band
+dft,,Ca2P2O7,Ca2P2O7,-3338.8,-68.2,-6.2,outside the band
+dft,,AlPO4,AlPO4,-1733.8,-67.5,-11.3,outside the band
+dft,,Li3PO4,Li3PO4,-2095.8,-29.6,-3.7,benchmarked
+dft,,LiPO3,LiPO3,-1255.2,-48.9,-9.8,outside the band
+dft,,LiPO3 glass,LiPO3,-1239.3,-64.8,-13.0,unbenchmarked
+dft,,Ca(PO3)2 glass,Ca(PO3)2,-2456.0,-124.7,-13.8,unbenchmarked
+dft,,CaSiO3,CaSiO3,-1634.8,-28.6,-5.7,outside the band
+dft,,Ca2SiO4,Ca2SiO4,-2306.7,-41.4,-5.9,outside the band
+dft,,Li2SiO3,Li2SiO3,-1648.1,-20.9,-3.5,benchmarked
+dft,,boehmite,AlHO2,--,--,--,unbenchmarked
+dft,,gibbsite,Al(OH)3,-1293.1,-87.6,-12.5,outside the band
+dft,,CaCO3,CaCO3,--,--,--,unbenchmarked
+dft,,LiClO4,LiClO4,-380.7,-202.8,-33.8,outside the band
+conversion,,Brushite to monetite (to Ca2P2O7),brushite -> monetite + 2 H2O,1.15 (0.166 to 7.99),threshold only; kinetically gated
+conversion,,Monetite to Ca2P2O7 (condensation),2 monetite -> Ca2P2O7 + H2O,15.1 (0.242 to 940),threshold only; kinetically gated
+conversion,,Ca2P2O7 to Ca(PO3)2 (acid-fed condensation),Ca2P2O7 + 2 H3PO4 -> 2 Ca(PO3)2 + 3 H2O,9.61e-05 (5.77e-11 to 160),threshold only; kinetically gated
+conversion,,Coacervate to glass,Ca-polyphosphate coacervate -> Ca(PO3)2 glass (drying),--,undetermined: no binodal or activity data of the coacervate
+conversion,,Al oxide film + phosphoric acid to AlPO4 (baked baseline),AlO(OH) + H3PO4 -> AlPO4 + 2 H2O,5.92e+04 (2.36e+03 to 1.48e+06),threshold only; kinetically gated
+conversion,,AlPO4 to Al(PO3)3,AlPO4 + P2O5 -> Al(PO3)3,--,undetermined: no tabulated thermochemistry of Al(PO3)3
+conversion,,Gelation (slurry to cell stage),polyphosphate + Al3+ -> Al-polyphosphate gel,--,undetermined: no solubility product of the aluminium polyphosphate
+conversion,,(LiPO3)n film (baseline),"(HPO3)n + Li2O/LiOH -> (LiPO3)n glass, dried",--,undetermined: not a dehydration threshold
+speciation,,101232 %0.45 %31 %

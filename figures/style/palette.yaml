@@ -1,0 +1,37 @@
+# Colours of the figures.
+# categorical.okabe_ito: the Okabe-Ito colour-universal palette (Okabe and Ito, Color Universal Design),
+#   hex and sRGB in [0, 1]. categorical.cycle: the colour cycle of rsc.mplstyle.
+# delta_e_min: the smallest CAM02-UCS distance (colorspacious deltaE) that two fill colours may have under
+#   normal vision and under simulated deuteranopia, protanopia and tritanopia (severity 100, clipped to the
+#   sRGB cube); biomin_screen.figures.colours checks the fills of the regime figures against it.
+delta_e_min: 20.0
+categorical:
+  okabe_ito:
+    black:
+      hex: '#000000'
+      srgb: [0.0, 0.0, 0.0]
+    orange:
+      hex: '#E69F00'
+      srgb: [0.902, 0.6235, 0.0]
+    skyblue:
+      hex: '#56B4E9'
+      srgb: [0.3373, 0.7059, 0.9137]
+    bluishgreen:
+      hex: '#009E73'
+      srgb: [0.0, 0.6196, 0.451]
+    yellow:
+      hex: '#F0E442'
+      srgb: [0.9412, 0.8941, 0.2588]
+    blue:
+      hex: '#0072B2'
+      srgb: [0.0, 0.4471, 0.698]
+    vermillion:
+      hex: '#D55E00'
+      srgb: [0.8353, 0.3686, 0.0]
+    reddishpurple:
+      hex: '#CC79A7'
+      srgb: [0.8, 0.4745, 0.6549]
+    gray:
+      hex: '#999999'
+      srgb: [0.6, 0.6, 0.6]
+  cycle: [blue, vermillion, bluishgreen, orange, reddishpurple, skyblue, black]

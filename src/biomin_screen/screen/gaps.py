@@ -1,0 +1,131 @@
+"""The gap-resolution table of the production screen (configs/gap_resolution.yaml).
+
+For every input the screen needs that has no sourced prior in data/params.yaml, the table specifies
+one treatment: ignorance (bounds from data/ignorance_priors.md), analog (a flagged analog key),
+design_axis (a specified grid) or unresolved (the test reports a gap and counts as inconclusive).
+Every production document records the sha256 of the table it read.
+"""
+import re
+from pathlib import Path
+
+import yaml
+
+GAP_TABLE = Path("configs") / "gap_resolution.yaml"
+TREATMENTS = ("ignorance", "analog", "design_axis", "unresolved")
+#: Table sections that account for unsourced keys without a treatment (they are not screen gaps).
+ACCOUNTED = ("not_screen_inputs", "computed_or_specified")
+
+
+class GapTableError(ValueError):
+    """The gap-resolution table is incomplete or names a treatment the rule does not allow."""
+
+
+def load(path=GAP_TABLE):
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+
+
+def unsourced_keys(params_doc):
+    """Primary keys of the parameter table with no sampled or fixed prior (gaps, computed, specified)."""
+    out = []
+    for key, e in (params_doc.get("params") or {}).items():
+        if not isinstance(e, dict) or e.get("role", "primary") != "primary":
+            continue
+        fam = (e.get("prior") or {}).get("family")
+        if e.get("status") == "gap" or fam in (None, "none", "categorical"):
+            out.append(key)
+    return out
+
+
+def check(table, params_doc):
+    """Problems of the table against the parameter table (empty when it is complete and valid)."""
+    problems = []
+    entries = table.get("gaps") or {}
+    covered = set(entries)
+    for sec in ACCOUNTED:
+        covered |= set(table.get(sec) or {})
+    for key in unsourced_keys(params_doc):
+        if key not in covered:
+            problems.append("%s: no specified treatment" % key)
+    params = params_doc.get("params") or {}
+    for key, e in entries.items():
+        t = e.get("treatment")
+        if t not in TREATMENTS:
+            problems.append("%s: treatment %r is not one of %s" % (key, t, TREATMENTS))
+        if t == "analog":
+            a = e.get("analog")
+            if a not in params:
+                problems.append("%s: analog key %r is not in the table" % (key, a))
+            elif params[a].get("role") != "analog" and "analog" not in (params[a].get("flags") or []) \
+                    and not str(a).startswith("log10_k_"):
+                problems.append("%s: %r is not a flagged analog or a literature binding key" % (key, a))
+        if t == "ignorance" and "prior" in e and "bound_from" in e and "ignorance_priors.md" not in str(e["bound_from"]):
+            problems.append("%s: ignorance bounds must come from data/ignorance_priors.md" % key)
+    return problems
+
+
+def analog_keys(table):
+    """{gap key: analog key} of the analog treatments (the C1 side-by-side analog included)."""
+    out = {k: e["analog"] for k, e in (table.get("gaps") or {}).items() if e.get("treatment") == "analog"}
+    c1 = ((table.get("c1") or {}).get("side_by_side") or {}).get("C1_analog")
+    if c1:
+        out["W_adh_wet"] = c1["analog"]
+    return out
+
+
+# ------------------------------------------------------------------ phosphate skeleton
+PH_TABLE = Path("configs") / "gap_resolution_ph.yaml"
+PENDING = "pending specification"
+
+
+def load_ph(path=PH_TABLE):
+    return load(path)
+
+
+def _walk(node, trail=()):
+    if isinstance(node, dict):
+        if "treatment" in node:
+            yield trail, node["treatment"]
+        for k, v in node.items():
+            yield from _walk(v, trail + (str(k),))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from _walk(v, trail + (str(i),))
+
+
+def treatments_ph(table):
+    """[(path, treatment)] of every entry of the phosphate skeleton that has a treatment slot."""
+    return [(".".join(t), v) for t, v in _walk(table)]
+
+
+def awaiting(table):
+    """Keys of the phosphate skeleton whose treatment is not yet specified."""
+    return sorted(p for p, v in treatments_ph(table) if v == PENDING)
+
+
+def check_ph(table):
+    """Problems of the phosphate skeleton: a treatment that is neither allowed nor the pending label."""
+    return ["%s: treatment %r is not one of %s or %r" % (p, v, TREATMENTS, PENDING)
+            for p, v in treatments_ph(table) if v not in TREATMENTS and v != PENDING]
+
+
+def covered_ph(table):
+    """Predicate: is a parameter-table key accounted for by the phosphate skeleton? Every mapping key and listed name
+    of the skeleton counts; a name with a placeholder (``dfg_<species>``, ``v_m_<P>``) matches any non-empty part."""
+    names = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                names.add(str(k))
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                if isinstance(v, str):
+                    names.add(v)
+                else:
+                    walk(v)
+    walk(table)
+    pats = [re.compile("^" + re.sub(r"<[^>]+>", ".+", re.escape(n).replace(r"\<", "<").replace(r"\>", ">")) + "$")
+            for n in names if "<" in n]
+    exact = {n for n in names if "<" not in n}
+    return lambda key: key in exact or any(p.match(key) for p in pats)

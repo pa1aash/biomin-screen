@@ -1,0 +1,53 @@
+{
+ "id": "fig4",
+ "name": "retrodiction",
+ "inputs": ["data/retrodiction/results/results.json"],
+ "axes": [
+  {"frame": {"xscale": "symlog", "yscale": "linear", "xlim": [-53.2069, 23898.0], "ylim": [-13.2, 0.6], "xticks": [-10.0, -1.0, 0.0, 1.0, 10.0, 100.0, 1000.0, 10000.0], "yticks": [0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.8, -8.6, -9.6, -10.6, -11.6, -12.6], "xticklabels": ["-10", "-1", "0", "1", "10", "100", "1000", "10000"], "yticklabels": ["RC01", "RC02", "RC03", "RC04", "RC05", "RC12", "RC06", "RC07", "RC08", "RC09", "RC10", "RC11"], "xlabel": "$\\Delta G^{*}_\\mathrm{het}/k_\\mathrm{B}T$, test $-$ reference", "ylabel": "", "panel": "a"}, "artists": [
+   {"kind": "line", "x": [60.0686], "y": [0.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[9.22377, 0.0, 247.292, 0.0]]},
+   {"kind": "line", "x": [81.7268], "y": [-1.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[14.3953, -1.0, 329.375, -1.0]]},
+   {"kind": "line", "x": [94.8248], "y": [-2.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[18.0028, -2.0, 382.368, -2.0]]},
+   {"kind": "line", "x": [5.94947], "y": [-3.0], "color": "#000000ff", "linestyle": "None", "marker": "D"},
+   {"kind": "LineCollection", "segments": [[-0.440095, -3.0, 32.6012, -3.0]]},
+   {"kind": "line", "x": [10.5205], "y": [-4.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[1.99163, -4.0, 47.2571, -4.0]]},
+   {"kind": "line", "x": [690.746], "y": [-5.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[26.4342, -5.0, 14936.3, -5.0]]},
+   {"kind": "line", "x": [44.12], "y": [-6.8], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[23.7586, -6.8, 71.8084, -6.8]]},
+   {"kind": "line", "x": [-7.688], "y": [-8.6], "color": "#d55e00ff", "linestyle": "None", "marker": "s"},
+   {"kind": "LineCollection", "segments": [[-33.2543, -8.6, -0.56058, -8.6]]},
+   {"kind": "line", "x": [-2.81736], "y": [-9.6], "color": "#d55e00ff", "linestyle": "None", "marker": "s"},
+   {"kind": "LineCollection", "segments": [[-12.0531, -9.6, -0.21336, -9.6]]},
+   {"kind": "line", "x": [-2.98304], "y": [-10.6], "color": "#d55e00ff", "linestyle": "None", "marker": "s"},
+   {"kind": "LineCollection", "segments": [[-12.773, -10.6, -0.220604, -10.6]]},
+   {"kind": "line", "x": [3.69607], "y": [-11.6], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "LineCollection", "segments": [[0.283663, -11.6, 15.5035, -11.6]]},
+   {"kind": "line", "x": [-0.145915], "y": [-12.6], "color": "#d55e00ff", "linestyle": "None", "marker": "s"},
+   {"kind": "LineCollection", "segments": [[-4.31076, -12.6, -0.00385886, -12.6]]},
+   {"kind": "line", "x": [0.0, 0.0], "y": [0.0, 1.0], "color": "#000000ff", "linestyle": "-", "marker": "None"}
+  ]},
+  {"frame": {"xscale": "linear", "yscale": "linear", "xlim": [-1.0, 1.0], "ylim": [-13.2, 0.6], "xticks": [], "yticks": [0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.8, -8.6, -9.6, -10.6, -11.6, -12.6], "xticklabels": [], "yticklabels": [], "xlabel": "", "ylabel": "", "panel": ""}, "artists": [
+   {"kind": "line", "x": [0.0], "y": [0.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-1.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-2.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-3.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-4.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-5.0], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-6.8], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-8.6], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-9.6], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-10.6], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-11.6], "color": "#000000ff", "linestyle": "None", "marker": ">"},
+   {"kind": "line", "x": [0.0], "y": [-12.6], "color": "#000000ff", "linestyle": "None", "marker": ">"}
+  ]},
+  {"frame": {"xscale": "linear", "yscale": "linear", "xlim": [-0.5, 12.5], "ylim": [0.0, 0.27485], "xticks": [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0], "yticks": [0.0, 0.1, 0.2, 0.3], "xticklabels": ["0", "2", "4", "6", "8", "10", "12"], "yticklabels": ["0.0", "0.1", "0.2", "0.3"], "xlabel": "Number of correct cases", "ylabel": "Fraction of permutations", "panel": "b"}, "artists": [
+   {"kind": "StepPatch", "geom": [-0.5, 0.0, -0.5, 0.003, 0.5, 0.003, 0.5, 0.0165, 1.5, 0.0165, 1.5, 0.065, 2.5, 0.065, 2.5, 0.162, 3.5, 0.162, 3.5, 0.2345, 4.5, 0.2345, 4.5, 0.233, 5.5, 0.233, 5.5, 0.1815, 6.5, 0.1815, 6.5, 0.0735, 7.5, 0.0735, 7.5, 0.026, 8.5, 0.026, 8.5, 0.004, 9.5, 0.004, 9.5, 0.001, 10.5, 0.001, 10.5, 0.0, 11.5, 0.0, 11.5, 0.0, 12.5, 0.0, 12.5, 0.0], "face": "#0072b200", "hatch": "None"},
+   {"kind": "StepPatch", "geom": [-0.5, 0.0, -0.5, 0.001, 0.5, 0.001, 0.5, 0.0085, 1.5, 0.0085, 1.5, 0.0555, 2.5, 0.0555, 2.5, 0.1155, 3.5, 0.1155, 3.5, 0.2105, 4.5, 0.2105, 4.5, 0.239, 5.5, 0.239, 5.5, 0.197, 6.5, 0.197, 6.5, 0.112, 7.5, 0.112, 7.5, 0.043, 8.5, 0.043, 8.5, 0.016, 9.5, 0.016, 9.5, 0.002, 10.5, 0.002, 10.5, 0.0, 11.5, 0.0, 11.5, 0.0, 12.5, 0.0, 12.5, 0.0], "face": "#0072b200", "hatch": "None"},
+   {"kind": "line", "x": [7.0, 7.0], "y": [0.0, 1.0], "color": "#000000ff", "linestyle": "-", "marker": "None"}
+  ]}
+ ]
+}

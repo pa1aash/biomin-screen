@@ -1,0 +1,747 @@
+# Machine-readable copy of the fenced `thresholds` block of data/thresholds.md.
+# Copied verbatim; the authority is data/thresholds.md. Do not edit.
+# source: data/thresholds.md
+# source-sha: 83ad83e82866d94b9bdbaf4be14f5dec280879d5
+version: 11
+authority: data/thresholds.md
+contract_version: 8
+decision:
+  statistic: band_mass
+  credible_level: {symbol: p_cred, params: thresholds.decision.credible_level}
+  verdicts:
+    feasible: 'P_good >= p_cred'
+    falsified: 'P_bad >= p_cred'
+    inconclusive: otherwise
+  order: [feasible, inconclusive, falsified]
+  clipping: {cos_ge_1: {theta: '0', f_theta: '0'}, cos_le_minus_1: {theta: pi, f_theta: '1'}, report: boundary_mass}
+  conventions:
+    p_cred: {primary: 0.9, sweep: [0.6, 0.9, 0.99], params: thresholds.decision.credible_level}
+    p_deg: {rule: 1 - p_cred, primary: 0.1, params: thresholds.decision.degrade_mass_min}
+    m_cos: {primary: 0, sweep: [0.1, 0.2], params: thresholds.C3.margin_cos_theta}
+    m_W: {from: fetched method-error evidence, or zero where the prior carries it, params: thresholds.C1.margin_W_adh_wet}
+    m_S: {from: fetched method-error evidence, or zero where the prior carries it, params: thresholds.C4.margin_S_spread}
+    m_E: {from: fetched method-error evidence, or zero where the prior carries it, params: thresholds.C5.window_margin}
+    m_expt: {from: experimental uncertainty budget of the expt route, params: thresholds.C5.window_margin_expt}
+    approved: [single_edge_f_half_plus_absolute_criterion, worst_state_per_link, path_sum_C3b,
+               square_lattice_closure_optimistic_supporting, C4_S_spread_falsified_only_if_coalescence_fails]
+    E_enr: labelled non-gating sensitivity
+  sizing:
+    band_mass_half_width_max: 0.01
+    sobol_total_order_half_width_max: 0.02
+    half_width: 2 x Monte Carlo standard error (binomial for band masses, bootstrap for Sobol indices)
+    draw_cap: 2**20 base draws per regime state
+    wall_clock_cap: 6 h per run
+    chunk: 2**14 draws, streamed
+    on_cap: report as capped with the half-widths reached
+  link_mass:
+    rule: joint, draw by draw, on the same draws
+    and_links: 'falsified side = P(any test bad)'
+    C4: 'falsified side = P(S_spread route bad and closure route bad)'
+    verdict: shared rule on the joint masses; single-test masses reported
+    deletion_test: joint falsified-side mass
+  states:
+    propagate: every specified state of the regime
+    worst_state_links: falsification at an evaluated state stands; a pass needs every specified state
+    path_sum: 'C3b (and the C4 closure route) cannot be falsified unless every specified state, drying included, is evaluated; with a state missing a shortfall is inconclusive and a pass stands'
+    report: missing states and the links they bound
+  priors:
+    gamma_sl0: {truncate_below: '0', reason: interface stability, sensitivity: untruncated prior, labelled,
+                report: [truncated mass, verdicts that change], params: params.gamma_sl0_template}
+  admissibility:
+    reason: interface stability; data/ignorance_priors.md Section 2a
+    condition: {quantity: gamma_sl_insitu, comparator: '>=', edge: '0'}
+    physics: a negative template-liquid energy describes an interface that lowers its free energy by growing; the planar interface the model describes does not exist there
+    joint_over: [gamma_sl0, Delta_G_seq, Gamma_s, delta_s]
+    at: every specified R-slurry state and every design point (c_bulk); a draw is admissible only if the condition holds at every specified state
+    draws_outside: refused and counted (never clipped, never floored at zero)
+    verdicts: on the admissible draws (the joint prior restricted to the admissible set), labelled conditional on admissibility
+    retained_mass_rule: 'M_adm (fraction of the joint prior in the admissible set) printed per design point and per state beside every verdict that uses gamma_sl (C3, C4, deletion test); never silently renormalised'
+    inadmissible_inputs: '1 - M_adm >= p_cred: link verdict inconclusive, labelled inadmissible inputs; the restricted verdict printed beside it (a statement about the inputs)'
+    report: [M_adm, 'P(gamma_sl_floor >= 0)', r_ads quantiles over admitted draws, verdicts that differ from the unrestricted run]
+    unrestricted: the run without the condition is a labelled sensitivity, never a verdict
+    special_case: 'c_bulk -> 0 gives gamma_sl0 >= 0 (the truncation above, unchanged)'
+    bookkeeping: restricts inputs only; Delta_G_seq still enters once through Delta_gamma_ads; Omega untouched
+    rejected: {saturating_form: no physical basis (the lowering is bounded by Pi_ads_max, not by gamma_sl0), coupling_function: physical (charge of the same groups) but unmodelled; the restriction induces the dependence}
+    params: {gamma_sl0: params.gamma_sl0_template, Gamma_s: params.gamma_s_site_density, c_bulk: params.c_bulk_slurry}
+  omega: Omega_bulk
+  forbidden_in_verdicts: [Omega_local_ideal, Delta_mu_local_ideal, DG_het_local_ideal, DG_het_double, E_enr, c_local,
+                          Omega_bulk_hydrated, Dgamma_coac_ideal]
+  drying_states:
+    iap: a_Ca*a_CO3
+    bias: the anhydrous IAP overstates Omega by a_w**(-n_hyd) when a_w < 1; drying states are optimistic
+    report: [a_w]
+    sensitivity: Omega_bulk_hydrated
+    params: {a_w: params.a_w_slurry, n_hyd: params.acc_hydration_n}
+links:
+  C1:
+    regimes: [R-slurry]
+    aggregation: worst_state
+    tests:
+      - id: C1
+        quantity: W_adh_wet
+        comparator: '>'
+        edge: m_W
+        params: {m_W: thresholds.C1.margin_W_adh_wet}
+        mixture: {over: termination, weights: regimes.R-slurry.parameters.termination_weights,
+                  weight_prior: 'Dirichlet(1, ..., 1) over the K specified terminations (flat; uniform on the simplex)',
+                  sub_region: not specified (no bound is admitted; narrowing is a change to a fixed input),
+                  draw: once per Monte Carlo draw, independent of every other input,
+                  quantity: 'W_mix = sum_k w_k W_k (area-weighted Dupre work of a contact shared among terminations)',
+                  point_weight: never, per_termination_verdicts: always reported beside the mixture (P_good_k and verdict),
+                  falsified_alone: named,
+                  weight_free_bounds: {report: ['P(min_k W_k > m_W)', 'P(max_k W_k > m_W)'],
+                                       feasible_for_every_weighting: 'P(min_k W_k > m_W) >= p_cred',
+                                       falsified_for_every_weighting: 'P(max_k W_k > m_W) <= 1 - p_cred',
+                                       otherwise: label conditional on the termination ignorance mixture (not a finding)}}
+    combine: C1
+    inputs_without_pmf:
+      specified_route: {quantity: W_adh_wet_from_pmf, inputs: [Delta_F_pmf, A_c], status: absent (no PMF),
+                          verdict: gap, counted: inconclusive}
+      side_by_side:
+        analog: {quantity: W_adh_wet, params: params.w_adh_wet_catechol_oxide_analog, rule: C1 rule (edge m_W),
+                 label: conditional on the analog, support: positive only (adhering contacts measured; cannot represent W <= 0)}
+        dupre_ignorance: {quantity: W_adh_wet, function: W_adh_wet,
+                          inputs: {gamma_ow: 'U[0, gamma_o + gamma_w]', gamma_op: 'U[0, gamma_o + gamma_p]', gamma_pw: params.gamma_sl0_template (truncated at 0)},
+                          support: {low: gamma_pw - gamma_o - gamma_p, high: gamma_pw + gamma_o + gamma_w},
+                          rule: C1 rule (edge m_W), label: ignorance prior; band masses never a finding,
+                          report: [flip value gamma_op* = gamma_ow + gamma_pw - m_W, flip line in the (gamma_ow, gamma_op) plane]}
+      both_reported: true
+      terminations: not resolved by either estimate; per-termination values identical; the mixture reduces to that value
+      contact_area_definition: not needed by either estimate (PMF route only)
+      study: a study verdict formed with either estimate carries its label; the specified study verdict has C1 = gap
+  C2:
+    role: descriptor
+    gating: false
+    regimes: [R-slurry]
+    statement: C2 is a binding descriptor. It enters C3 only through Delta_gamma_ads and is not an independent kill criterion.
+    analog_route:
+      label: conditional on the analog (a solution complexation constant, not a surface-site free energy)
+      Delta_G_site: {function: Delta_G_site_from_K, params: {K_Ca_L: params.log10_k_ca_catecholate}, standard_state: site volume}
+      cycle: {function: Delta_G_seq_cycle_2H, params: {pKa: params.pka_catechol, pKa2: params.pka2_catechol},
+              reason: the constant refers to the catecholate dianion; both protons are charged}
+      x_bind: x_bind_K
+      direction: 'lateral repulsion and site competition only lower the occupancy (Langmuir at the solution affinity is an upper bound on the lowering); site geometry moves the zero-coverage affinity either way'
+    enters: {link: C3, via: Delta_gamma_ads}
+    report: [Delta_G_seq, Theta_occ, Gamma_Ca, Delta_gamma_ads]
+    finding:
+      quantity: Delta_G_seq
+      premise_fails: 'P(Delta_G_seq >= 0) >= p_cred'
+      premise_holds: 'P(Delta_G_seq < 0) >= p_cred'
+      otherwise: premise_undecided
+      text_on_fail: the sequestration premise fails
+    sensitivities:
+      - id: C2m
+        label: mass beyond the method-error margin (reported, not gating)
+        quantity: Delta_G_seq
+        comparator: '<'
+        edge: -m_seq
+        params: {m_seq: thresholds.C2.margin_DG_seq}
+  C3:
+    regimes: [R-slurry]
+    tests:
+      - id: C3a
+        aggregation: worst_state
+        quantity: f_theta
+        cos_function: cos_theta_template
+        comparator: '<='
+        edge: (2 + m_cos)*(1 - m_cos)**2/4
+        params: {m_cos: thresholds.C3.margin_cos_theta}
+        edge_note: single edge at f = 1/2 (cos theta = m_cos)
+        admissible_draws_only: true
+        favourable_requires: 'gamma_sn <= gamma_sl - m_cos*gamma_nl (with gamma_sl >= 0, gamma_sn >= 0); a binding template has gamma_sl <= gamma_sl0 + R_gas*T*delta_s*c_bulk'
+        report_beside: retained mass M_adm of the admissibility rule (decision.admissibility)
+      - id: C3b
+        aggregation: path_sum
+        quantity: N_nuc
+        comparator: '>='
+        edge: log(1/(1 - p_cred))/A_patch
+        N_req: {equals: log(1/(1 - p_cred))/A_patch, q_0: 1 - p_cred, rule: Poisson occupancy (empty-patch fraction at most q_0),
+                not: the C4 closure density}
+        equivalent_single_state: {quantity: DG_het, comparator: '<=', edge: k_B*T*log(J0_het*t_proc*A_patch/log(1/(1 - p_cred)))}
+        params: {J0_het: regimes.R-slurry.parameters.J0_het, t_proc: regimes.R-slurry.parameters.t_proc,
+                 A_patch: regimes.R-slurry.parameters.patch_area, p_cred: thresholds.decision.credible_level}
+        report: [DG_het/(k_B*T), DG_hom/(k_B*T)]
+        A_patch_bound: {ignorance: data/ignorance_priors.md geometry.A_patch (low a_asp, high pi*d_p**2/4, loguniform),
+                        status: gap, on_gap: 'C3b reported as gap, counted inconclusive; flip values of A_patch reported'}
+    combine: 'C3a and C3b'
+    joint_mass: 'falsified side P(C3a bad or C3b bad), draw by draw'
+  C4:
+    regimes: [R-slurry, R-cell]
+    aggregation: worst_state
+    tests:
+      - id: C4
+        quantity: S_spread
+        comparator: '>='
+        edge: m_S
+        params: {m_S: thresholds.C4.margin_S_spread}
+      - id: C4s
+        role: alternative route
+        quantity: N_nuc
+        comparator: '>='
+        edge: tan(theta/2)**2/(2*d_max**2)
+        d_max: {max_of: [d_max_ohm, d_max_tun]}
+        params: {R_A_max: regimes.R-cell.parameters.R_A_max, j_req: regimes.R-cell.parameters.j_req,
+                 rho_e: regimes.R-cell.parameters.rho_e, phi_B: regimes.R-cell.parameters.phi_B,
+                 m_e: regimes.R-cell.parameters.m_eff, j_0: regimes.R-cell.parameters.j_0}
+    combine:
+      indicator: 'good per draw if C4 holds or C4s holds'
+      feasible: 'P(C4 holds or C4s holds) >= p_cred (sufficient: C4 feasible, or C4s feasible)'
+      falsified: 'P(C4 fails and C4s fails) >= p_cred (needs C4 falsified and C4s falsified)'
+      inconclusive: otherwise
+      joint_mass: 'falsified side P(S_spread < m_S and N_nuc < N_s_closure), draw by draw'
+      N_nuc: upper estimate of C3b (path sum); a pass through closure is optimistic and labelled
+    report_mass: 'P(gamma_sl > gamma_nl) at every specified state'
+    complete_wetting_excluded_when: 'gamma_sl <= gamma_nl (hydrophilic template): S_spread <= -gamma_sn for every admissible gamma_sn'
+    admissible_draws_only: true
+  C5:
+    regimes: [R-slurry, R-cell]
+    tests:
+      - id: C5s
+        regime: R-slurry
+        role: dissolution
+        aggregation: worst_state
+        quantity: Omega_bulk
+        comparator: '>='
+        edge: '1'
+        K_sp: calcite under every specified framing; ACC is the sensitivity C5s_ACC
+        activities: {a_Ca: a_Ca_speciation, a_CO3: a_CO3_speciation}
+        params: {K_sp: params.log10_ksp_calcite, a_Ca: params.a_ca_slurry, Ca_T: params.ca_total_slurry,
+                 C_T: params.dic_slurry, pH: regimes.R-slurry.parameters.pH_range}
+        design_axes: [a_Ca, C_T]
+        report_as: dose window (design points where C5s is feasible), with the falsified and inconclusive sets
+        shares_quantity_with: C3
+        state: bulk
+        requires: falsifiability_control_fails_where_it_must
+        control:
+          applies_to: C5s
+          undersaturated: must report dissolution (P(Omega_bulk < 1) >= p_cred)
+          supersaturated: must report stability (P(Omega_bulk >= 1) >= p_cred)
+          params: {pH: params.ph_slurry_modified}
+          on_failure: inconclusive
+        carbon_redox: {assumption: 'C(IV) fixed by the regime (a_CO3); carbonate reduction to CH4 is not observed in aqueous processing',
+                       sensitivity: construction with carbon redox allowed, labelled, never decides}
+        hull_not_used_for_dissolution: 'hull distance (R*T/N_M)*log(1/Omega_bulk) per atom; the tolerance hides dissolution down to log(Omega_bulk) = -N_atoms*e_form/(R*T)'
+      - id: C5s_phase
+        regime: R-slurry
+        role: competing_phase
+        aggregation: worst_point
+        quantity: Delta_G_pbx
+        comparator: '<='
+        edge_by_framing:
+          calcite: N_atoms*e_form/N_M
+          ACC: (N_atoms*e_form + Delta_ACC)/N_M
+        params: {e_form: thresholds.C5.formation_energy_error, Delta_ACC: regimes.R-slurry.parameters.ACC_offset,
+                 pH: regimes.R-slurry.parameters.pH_range, E_SHE: regimes.R-slurry.parameters.E_SHE_range}
+        carbon: C(IV) fixed at the regime C_T
+        competitors: solid phases only; dissolved Ca-bearing species excluded (dissolution is C5s)
+        state: bulk
+        acc_edge_equivalence: the ACC edge makes the test equal to the calcite-level test
+        al_baseline: {reported: true, gating: false, tolerance: same DFT tolerance, carbon: C(IV) fixed}
+    sensitivities:
+      - id: C5s_ACC
+        label: ACC dissolution margin under the ACC framing (reported, not gating)
+        framing: ACC
+        quantity: Omega_bulk
+        comparator: '>='
+        edge: '1'
+        uses: K_sp of the ACC framing (the prior already used by C3)
+      - id: C5c_ox
+        regime: R-cell
+        quantity: E_ox
+        comparator: '>='
+        edge: E_cell_max + m_expt
+        governing_route: expt (all-experimental thermochemistry) wherever its inputs exist
+        pass: {route: expt, sink: solvated}
+        falsify: {quantity: E_ox, comparator: '<', edge: E_cell_max - m_expt, route: expt, sink: [solvated, solid_salt]}
+        otherwise: inconclusive
+        comparators: {dft_schemes: regimes.R-cell.parameters.gas_reference_schemes, printed_with: measured benchmark errors,
+                      benchmark_corrected: equals expt by construction; never a second confirmation}
+        where_expt_missing: {rule: DFT-decided limit, pass: lowest-onset DFT scheme, falsify: every DFT scheme, margin: m_E,
+                             edge_pass: E_cell_max + m_E, edge_falsify: E_cell_max - m_E, label: DFT-decided}
+        params: {E_cell_max: regimes.R-cell.parameters.E_max, m_expt: thresholds.C5.window_margin_expt, m_E: thresholds.C5.window_margin,
+                 schemes: regimes.R-cell.parameters.gas_reference_schemes,
+                 salts: regimes.R-cell.parameters.electrolyte_salts}
+        margin_by_route:
+          expt: {symbol: m_expt, params: thresholds.C5.window_margin_expt, key: window_margin_expt, applies: wherever the expt inputs exist,
+                 reaction: CaCO3 + 2 LiClO4 -> Ca(ClO4)2 + CO2 + 1/2 O2 + 2 Li (solid-salt sink)}
+          dft_where_expt_missing: {symbol: m_E, params: thresholds.C5.window_margin, key: window_margin, rule: DFT-decided limit,
+                                   formula: N_unc*e_form/(Delta_n_Li*F_c), formula_params: {e_form: thresholds.C5.formation_energy_error},
+                                   specified_reaction: {N_unc: 5 atoms of CaCO3, Delta_n_Li: 2}}
+          dft_where_expt_exists: {margin: none, role: comparator, printed_with: measured benchmark error}
+          benchmark_corrected: {margin: none, role: comparator, never: a second confirmation}
+          per_reaction: one margin per reaction and sink; an expt limit of any other reaction or sink needs its own budget key
+          margin_key_absent: undetermined (never passes, never falsifies)
+        m_expt_parts: [tabulated uncertainties of reactants and products per transferred electron,
+                       bound on the neglected solid entropy of Ca(ClO4)2 from analog solid-salt entropies]
+        m_expt_params: [params.u_tab_dfh_ca_clo4_2, params.u_tab_dfh_liclo4, params.u_tab_dfg_co2, params.u_tab_dfg_caco3,
+                        params.exchange_entropy_bound, params.s_ca_clo4_2_analog_low, params.s_ca_clo4_2_analog_high]
+        design_axis: {E_cell_max: by cathode class, params: regimes.R-cell.parameters.cathode_class,
+                      report: [crossover E_ox - m_expt (feasible at or below, solvated sink), crossover E_ox + m_expt (falsified above)]}
+        undetermined: never_passes
+        solid_salt_sink: {falsification: stands, pass: inconclusive, reason: upper bound on the onset}
+        table: every route and scheme printed (expt, each DFT scheme, each benchmark-corrected scheme)
+        limitation: electrolyte anodic limit not assessed
+      - id: C5c_red
+        regime: R-cell
+        quantity: E_red
+        comparator: '<='
+        edge: E_cell_min - m_expt
+        governing_route: expt wherever its inputs exist
+        pass: {route: expt}
+        falsify: {quantity: E_red, comparator: '>', edge: E_cell_min + m_expt, route: expt}
+        otherwise: inconclusive
+        where_expt_missing: {rule: DFT-decided limit, margin: m_E, edge_pass: E_cell_min - m_E, edge_falsify: E_cell_min + m_E,
+                             label: DFT-decided}
+        params: {E_cell_min: regimes.R-cell.parameters.E_min, m_expt: thresholds.C5.window_margin_expt, m_E: thresholds.C5.window_margin,
+                 schemes: regimes.R-cell.parameters.gas_reference_schemes}
+        margin_by_route: same as C5c_ox (expt route m_expt; m_E only where the expt route is missing; a reduction limit needs its own budget key)
+        undetermined: never_passes
+    gated_phases: {R-slurry: [CaCO3 framing phase], R-cell: [CaCO3, corundum, boehmite]}
+    al_phases: {specified: [corundum, boehmite], params: regimes.R-cell.parameters.al_phases, others: reported, not gated}
+    sinks: {LiClO4: "CaCO3 via the Ca(ClO4)2 exchange route; Al phases undetermined until Al(ClO4)3 is tabulated", LiBOB: undetermined (never a pass), LiPCP: undetermined (never a pass)}
+    combine: 'C5s and C5s_phase and C5c_ox and C5c_red'
+study:
+  framings:
+    specified: [calcite, ACC]
+    params: {framing: regimes.R-slurry.parameters.framing}
+    run: whole chain per framing (K_sp, V_m, gamma_nl of one framing; never mixed across links)
+    falsified: falsified under every specified framing
+    feasible: feasible under at least one framing; name it and report the other beside it
+    inconclusive: otherwise
+    c5_dissolution: calcite K_sp under both framings
+  gating_links: [C1, C3, C4, C5]
+  descriptor_links: [C2]
+  falsified: 'any of C1, C3, C4, C5 falsified'
+  feasible: 'all of C1, C3, C4, C5 feasible and deletion_test holds'
+  inconclusive: otherwise
+  report_with_verdict: [C2.finding]
+  deletion_test:
+    gating_controls: [bare_oxide, PVDF]
+    links: [C3, C4]
+    degrade: 'verdict strictly worse, or falsified-side mass up by at least p_deg'
+    params: {p_deg: thresholds.decision.degrade_mass_min}
+    c1_alone_counts: false
+    on_failure: framing_generic_adhesion
+    reported_not_gating: [catechol_only, chitosan_only, carboxylate_substituted]
+screen_ph:
+  margins: 'the entry margins_v6 below, rules in Section 7; values derived, never typed'
+  # BEGIN generated margins_v6 (derived entry; do not edit by hand)
+  margins_v6:
+    sources:
+      ladder: results/pourbaix/benchmark/ladder_v2.csv
+      budgets: results/pourbaix/benchmark/benchmark.json
+      benchmark: results/pourbaix/benchmark/formation_benchmark_table.csv
+      al_window: results/pourbaix/benchmark/al_window.json
+      params: data/params.yaml
+    cutoff_classes:
+      C_lo:
+        name: LFP-class
+        E_c_V: [3.65]
+      C_mid:
+        name: 4.2-4.3 V
+        E_c_V: [4.2, 4.3]
+      C_hi:
+        name: 4.4-4.5 V
+        E_c_V: [4.4, 4.5]
+      unit: V
+      source: ladder columns d_<E>_V and status_<class> (specified names)
+      flag: {e_cell_max_lfp_V: 4.0, note: the sourced LFP charge cutoff differs from the specified LFP-class value; the specified value is used}
+    m_K1:
+      symbol: m_expt per (phase, framing, reaction, sink)
+      rule: linear sum of the tabulated uncertainties of every species whose energy does not cancel, plus T0 times the bound on the neglected exchange entropy of the solid-salt sink, over n_e F (the m_expt budget of the carbonate gate, applied per reaction); a bound, not a standard deviation
+      rows:
+      - {phase: brushite, framing: crystalline, reaction: r1, text: 'CaPH5O6 [brushite] + 2 LiClO4 -> Ca(ClO4)2 + 0.5 P2O5 + 2.5 H2O + 0.5 O2 + 2 Li', sink: LiClO4 (solid salt), E_ub_V: 4.6947, n_e: 2.0, terms_kJ: {tabulated: 15.755, entropy_bound: 8.547}, m_V: 0.1259, status: set}
+      - {phase: brushite, framing: crystalline, reaction: r1s, text: 'CaPH5O6 [brushite] + LiClO4 -> 0.5 Ca(PO3)2 + 0.5 Ca(ClO4)2 + 2.5 H2O + 0.25 O2 + Li', sink: LiClO4 (solid salt), E_ub_V: 4.423, n_e: 1.0, terms_kJ: {tabulated: 32.394, entropy_bound: 4.274}, m_V: 0.38, status: set}
+      - {phase: brushite, framing: crystalline, reaction: r3, text: 'CaPH5O6 [brushite] + 2 LiClO4 -> Ca(ClO4)2 + H3PO4 + H2O + 0.5 O2 + 2 Li', sink: LiClO4 (solid salt), E_ub_V: 4.2658, n_e: 2.0, terms_kJ: {tabulated: 23.573, entropy_bound: 8.547}, m_V: 0.1665, status: set}
+      - {phase: ACP, framing: crystalline, reaction: r1, text: 'Ca3(PO4)2 [b-TCP] + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li', sink: LiClO4 (solid salt), E_ub_V: 4.4846, n_e: 6.0, terms_kJ: {tabulated: 25.41, entropy_bound: 25.642}, m_V: 0.0882, status: set}
+      - {phase: ACP, framing: crystalline, reaction: r1s, text: 'Ca3(PO4)2 [b-TCP] + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li', sink: LiClO4 (solid salt), E_ub_V: 4.0223, n_e: 2.0, terms_kJ: {tabulated: 20.005, entropy_bound: 8.547}, m_V: 0.148, status: set}
+      - {phase: HAp, framing: crystalline, reaction: r1, text: 'Ca5(PO4)3OH [HAp] + 10 LiClO4 -> 5 Ca(ClO4)2 + 1.5 P2O5 + 0.5 H2O + 2.5 O2 + 10 Li', sink: LiClO4 (solid salt), E_ub_V: 4.4564, n_e: 10.0, terms_kJ: {tabulated: 39.034, entropy_bound: 42.737}, m_V: 0.0847, status: set}
+      - {phase: HAp, framing: crystalline, reaction: r1s, text: 'Ca5(PO4)3OH [HAp] + 4 LiClO4 -> 1.5 Ca2P2O7 + 2 Ca(ClO4)2 + 0.5 H2O + O2 + 4 Li', sink: LiClO4 (solid salt), E_ub_V: 4.0674, n_e: 4.0, terms_kJ: {tabulated: 30.926, entropy_bound: 17.095}, m_V: 0.1244, status: set}
+      - {phase: HAp, framing: crystalline, reaction: r2, text: 'Ca5(PO4)3OH [HAp] + LiClO4 -> 1.5 Ca3(PO4)2 [b-TCP] + 0.5 Ca(ClO4)2 + 0.5 H2O + 0.25 O2 + Li', sink: LiClO4 (solid salt), E_ub_V: 4.2029, n_e: 1.0, terms_kJ: {tabulated: 15.918, entropy_bound: 4.274}, m_V: 0.2093, status: set}
+      - {phase: OCP, framing: crystalline, reaction: r1, text: 'Ca8P6H12O29 [OCP] + 16 LiClO4 -> 8 Ca(ClO4)2 + 3 P2O5 + 6 H2O + 4 O2 + 16 Li', sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: OCP'}
+      - {phase: OCP, framing: crystalline, reaction: r1s, text: 'Ca8P6H12O29 [OCP] + 4 LiClO4 -> 3 Ca2P2O7 + 2 Ca(ClO4)2 + 6 H2O + O2 + 4 Li', sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: OCP'}
+      - {phase: b-TCP, framing: crystalline, reaction: r1, text: 'Ca3(PO4)2 [b-TCP] + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li', sink: LiClO4 (solid salt), E_ub_V: 4.4846, n_e: 6.0, terms_kJ: {tabulated: 25.41, entropy_bound: 25.642}, m_V: 0.0882, status: set}
+      - {phase: b-TCP, framing: crystalline, reaction: r1s, text: 'Ca3(PO4)2 [b-TCP] + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li', sink: LiClO4 (solid salt), E_ub_V: 4.0223, n_e: 2.0, terms_kJ: {tabulated: 20.005, entropy_bound: 8.547}, m_V: 0.148, status: set}
+      - {phase: a-TCP, framing: crystalline, reaction: r1, text: 'Ca3(PO4)2 [a-TCP] + 6 LiClO4 -> 3 Ca(ClO4)2 + P2O5 + 1.5 O2 + 6 Li', sink: LiClO4 (solid salt), E_ub_V: 4.4708, n_e: 6.0, terms_kJ: {tabulated: 28.778, entropy_bound: 25.642}, m_V: 0.094, status: set}
+      - {phase: a-TCP, framing: crystalline, reaction: r1s, text: 'Ca3(PO4)2 [a-TCP] + 2 LiClO4 -> Ca2P2O7 + Ca(ClO4)2 + 0.5 O2 + 2 Li', sink: LiClO4 (solid salt), E_ub_V: 3.981, n_e: 2.0, terms_kJ: {tabulated: 23.373, entropy_bound: 8.547}, m_V: 0.1654, status: set}
+      - {phase: Li3PO4, framing: crystalline, reaction: r1, text: Li3PO4 -> 0.5 P2O5 + 0.75 O2 + 3 Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Li3PO4'}
+      - {phase: Li3PO4, framing: crystalline, reaction: r1s, text: Li3PO4 -> 0.5 Li4P2O7 + 0.25 O2 + Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Li3PO4, Li4P2O7'}
+      - {phase: Ca2P2O7, framing: crystalline, reaction: r1, text: Ca2P2O7 + 4 LiClO4 -> 2 Ca(ClO4)2 + P2O5 + O2 + 4 Li, sink: LiClO4 (solid salt), E_ub_V: 4.7157, n_e: 4.0, terms_kJ: {tabulated: 22.142, entropy_bound: 17.095}, m_V: 0.1017, status: set}
+      - {phase: Ca2P2O7, framing: crystalline, reaction: r1s, text: Ca2P2O7 + 2 LiClO4 -> Ca(PO3)2 + Ca(ClO4)2 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 4.4651, n_e: 2.0, terms_kJ: {tabulated: 55.421, entropy_bound: 8.547}, m_V: 0.3315, status: set}
+      - {phase: Ca(PO3)2 / Ca-polyphosphate glass, framing: crystalline, reaction: r1, text: Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 4.9664, n_e: 2.0, terms_kJ: {tabulated: 47.553, entropy_bound: 8.547}, m_V: 0.2907, status: set}
+      - {phase: Ca(PO3)2 / Ca-polyphosphate glass, framing: amorphous, reaction: r1, text: Ca(PO3)2 + 2 LiClO4 -> Ca(ClO4)2 + P2O5 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 4.8929, n_e: 2.0, terms_kJ: {tabulated: 17.473, entropy_bound: 8.547}, m_V: 0.1348, status: set}
+      - {phase: AlPO4, framing: crystalline, reaction: r4, text: AlPO4 + 3 LiClO4 -> Al(ClO4)3 + 0.5 P2O5 + 0.75 O2 + 3 Li, sink: LiClO4 (solid salt), E_ub_V: 5.2105, n_e: 3.0, terms_kJ: {tabulated: 16.042, entropy_bound: 0.0}, status: symbolic, reason: 'budget incomplete (no bound on the exchange entropy of the Al perchlorate sink (dfg_al_clo4_3 is a gap)); a partial budget can neither pass nor falsify, so the reaction is undetermined', m_V_partial: 0.0554}
+      - {phase: AlPO4, framing: crystalline, reaction: r4s, text: AlPO4 + 2 LiClO4 -> 0.3333 Al(PO3)3 + 0.6667 Al(ClO4)3 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Al(PO3)3'}
+      - {phase: Al(PO3)3, framing: crystalline, reaction: r4, text: Al(PO3)3 + 3 LiClO4 -> Al(ClO4)3 + 1.5 P2O5 + 0.75 O2 + 3 Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Al(PO3)3'}
+      - {phase: Al-polyphosphate (R1 gel), framing: crystalline, reaction: r4, text: Al(PO3)3 + 3 LiClO4 -> Al(ClO4)3 + 1.5 P2O5 + 0.75 O2 + 3 Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Al(PO3)3'}
+      - {phase: (LiPO3)n Hydro-Quebec film, framing: crystalline, reaction: r1, text: LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li, sink: LiClO4 (solid salt), E_ub_V: 5.0208, n_e: 1.0, terms_kJ: {tabulated: 11.6, entropy_bound: 0.0}, m_V: 0.1202, status: set}
+      - {phase: (LiPO3)n Hydro-Quebec film, framing: amorphous, reaction: r1, text: LiPO3 -> 0.5 P2O5 + 0.25 O2 + Li, sink: LiClO4 (solid salt), E_ub_V: 4.9842, n_e: 1.0, terms_kJ: {tabulated: 23.965, entropy_bound: 0.0}, m_V: 0.2484, status: set}
+      - {phase: baked aluminophosphate (Tsinghua), framing: crystalline, reaction: r4, text: AlPO4 + 3 LiClO4 -> Al(ClO4)3 + 0.5 P2O5 + 0.75 O2 + 3 Li, sink: LiClO4 (solid salt), E_ub_V: 5.2105, n_e: 3.0, terms_kJ: {tabulated: 16.042, entropy_bound: 0.0}, status: symbolic, reason: 'budget incomplete (no bound on the exchange entropy of the Al perchlorate sink (dfg_al_clo4_3 is a gap)); a partial budget can neither pass nor falsify, so the reaction is undetermined', m_V_partial: 0.0554}
+      - {phase: baked aluminophosphate (Tsinghua), framing: crystalline, reaction: r4s, text: AlPO4 + 2 LiClO4 -> 0.3333 Al(PO3)3 + 0.6667 Al(ClO4)3 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), status: symbolic, reason: 'expt route undetermined: Al(PO3)3'}
+      - {phase: CaSiO3, framing: crystalline, reaction: r1, text: CaSiO3 + 2 LiClO4 -> Ca(ClO4)2 + SiO2 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 3.7171, n_e: 2.0, terms_kJ: {tabulated: 8.037, entropy_bound: 8.547}, status: symbolic, reason: 'budget incomplete (no printed uncertainty for SiO2); a partial budget can neither pass nor falsify, so the reaction is undetermined', m_V_partial: 0.0859}
+      - {phase: Ca2SiO4, framing: crystalline, reaction: r1, text: Ca2SiO4 + 4 LiClO4 -> 2 Ca(ClO4)2 + SiO2 + O2 + 4 Li, sink: LiClO4 (solid salt), E_ub_V: 3.5866, n_e: 4.0, terms_kJ: {tabulated: 14.774, entropy_bound: 17.095}, status: symbolic, reason: 'budget incomplete (no printed uncertainty for SiO2); a partial budget can neither pass nor falsify, so the reaction is undetermined', m_V_partial: 0.0826}
+      - {phase: Ca2SiO4, framing: crystalline, reaction: r1s, text: Ca2SiO4 + 2 LiClO4 -> CaSiO3 + Ca(ClO4)2 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 3.4561, n_e: 2.0, terms_kJ: {tabulated: 9.537, entropy_bound: 8.547}, m_V: 0.0937, status: set}
+      - {phase: Li2SiO3, framing: crystalline, reaction: r1, text: Li2SiO3 -> SiO2 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 3.6319, n_e: 2.0, terms_kJ: {tabulated: 8.368, entropy_bound: 0.0}, status: symbolic, reason: 'budget incomplete (no printed uncertainty for SiO2); a partial budget can neither pass nor falsify, so the reaction is undetermined', m_V_partial: 0.0434}
+      - {phase: CaCO3, framing: crystalline, reaction: r1, text: CaCO3 + 2 LiClO4 -> Ca(ClO4)2 + CO2 + 0.5 O2 + 2 Li, sink: LiClO4 (solid salt), E_ub_V: 3.9378, n_e: 2.0, terms_kJ: {tabulated: 8.237, entropy_bound: 8.547}, m_V: 0.087, status: set}
+    tier1_crossovers:
+    - {phase: brushite, framing: crystalline, falsified_above_V: 4.4323, by: r3, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: partial}, undetermined_reactions: []}
+    - {phase: ACP, framing: crystalline, falsified_above_V: 4.1703, by: r1s, classes: {C_lo: not falsified, C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: []}
+    - {phase: HAp, framing: crystalline, falsified_above_V: 4.1918, by: r1s, classes: {C_lo: not falsified, C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: []}
+    - {phase: OCP, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r1, r1s]}
+    - {phase: b-TCP, framing: crystalline, falsified_above_V: 4.1703, by: r1s, classes: {C_lo: not falsified, C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: []}
+    - {phase: a-TCP, framing: crystalline, falsified_above_V: 4.1464, by: r1s, classes: {C_lo: not falsified, C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: []}
+    - {phase: Li3PO4, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r1, r1s]}
+    - {phase: Ca2P2O7, framing: crystalline, falsified_above_V: 4.7966, by: r1s, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: not falsified}, undetermined_reactions: []}
+    - {phase: Ca(PO3)2 / Ca-polyphosphate glass, framing: crystalline, falsified_above_V: 5.2571, by: r1, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: not falsified}, undetermined_reactions: []}
+    - {phase: Ca(PO3)2 / Ca-polyphosphate glass, framing: amorphous, falsified_above_V: 5.0277, by: r1, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: not falsified}, undetermined_reactions: []}
+    - {phase: AlPO4, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r4, r4s]}
+    - {phase: Al(PO3)3, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r4]}
+    - {phase: Al-polyphosphate (R1 gel), framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r4]}
+    - {phase: (LiPO3)n Hydro-Quebec film, framing: crystalline, falsified_above_V: 5.141, by: r1, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: not falsified}, undetermined_reactions: []}
+    - {phase: (LiPO3)n Hydro-Quebec film, framing: amorphous, falsified_above_V: 5.2326, by: r1, classes: {C_lo: not falsified, C_mid: not falsified, C_hi: not falsified}, undetermined_reactions: []}
+    - {phase: baked aluminophosphate (Tsinghua), framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r4, r4s]}
+    - {phase: CaSiO3, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r1]}
+    - {phase: Ca2SiO4, framing: crystalline, falsified_above_V: 3.5498, by: r1s, classes: {C_lo: falsified (tier 1), C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: [r1]}
+    - {phase: Li2SiO3, framing: crystalline, falsified_above_V: null, classes: undetermined, undetermined_reactions: [r1]}
+    - {phase: CaCO3, framing: crystalline, falsified_above_V: 4.0248, by: r1, classes: {C_lo: not falsified, C_mid: falsified (tier 1), C_hi: falsified (tier 1)}, undetermined_reactions: []}
+    tier1_amorphous_by_bound:
+    - {phase: brushite, classes: {C_lo: undetermined, C_mid: undetermined, C_hi: undetermined}}
+    - {phase: ACP, classes: {C_lo: undetermined, C_mid: falsified (bound), C_hi: falsified (bound)}}
+    - {phase: HAp, classes: {C_lo: undetermined, C_mid: falsified (bound), C_hi: falsified (bound)}}
+    - {phase: OCP, classes: undetermined}
+    - {phase: b-TCP, classes: {C_lo: undetermined, C_mid: falsified (bound), C_hi: falsified (bound)}}
+    - {phase: a-TCP, classes: {C_lo: undetermined, C_mid: falsified (bound), C_hi: falsified (bound)}}
+    - {phase: Ca2P2O7, classes: {C_lo: undetermined, C_mid: undetermined, C_hi: undetermined}}
+    - {phase: AlPO4, classes: undetermined}
+    - {phase: Al(PO3)3, classes: undetermined}
+    - {phase: Al-polyphosphate (R1 gel), classes: undetermined}
+    - {phase: baked aluminophosphate (Tsinghua), classes: undetermined}
+    m_E:
+      status: not set for any phosphate row
+      rule: m_E = N_unc max(e_form, |delta_P|) / (n_e F) for a reaction without an expt route, only when every uncancelled species is dft-benchmarked; otherwise the DFT value is a comparator
+      e_form_key: formation_energy_mae
+      e_form_kJ_per_atom: 4.776
+      cases:
+      - {phase: OCP, reaction: r1, species: {OCP: dft-unbenchmarked, P2O5: dft-benchmark-failed}, qualifies: false}
+      - {phase: OCP, reaction: r1s, species: {OCP: dft-unbenchmarked, Ca2P2O7: dft-benchmark-failed}, qualifies: false}
+      - {phase: Li3PO4, reaction: r1, species: {Li3PO4: dft-benchmarked, P2O5: dft-benchmark-failed}, qualifies: false}
+      - {phase: Li3PO4, reaction: r1s, species: {Li3PO4: dft-benchmarked, Li4P2O7: not in the benchmark}, qualifies: false}
+      - {phase: AlPO4, reaction: r4s, species: {AlPO4: dft-benchmark-failed, Al(PO3)3: not in the benchmark}, qualifies: false}
+      - {phase: Al(PO3)3, reaction: r4, species: {Al(PO3)3: not in the benchmark, P2O5: dft-benchmark-failed}, qualifies: false}
+      - {phase: Al-polyphosphate (R1 gel), reaction: r4, species: {Al(PO3)3: not in the benchmark, P2O5: dft-benchmark-failed}, qualifies: false}
+      - {phase: baked aluminophosphate (Tsinghua), reaction: r4s, species: {AlPO4: dft-benchmark-failed, Al(PO3)3: not in the benchmark}, qualifies: false}
+      benchmark_per_phase:
+        P2O5: {status: dft-benchmark-failed, delta_kJ_per_atom: -19.32}
+        HAp: {status: dft-benchmarked, delta_kJ_per_atom: -4.68}
+        b-TCP: {status: dft-benchmarked, delta_kJ_per_atom: -3.6}
+        a-TCP: {status: dft-benchmarked, delta_kJ_per_atom: -4.76}
+        brushite: {status: dft-benchmark-failed, delta_kJ_per_atom: -16.15}
+        monetite: {status: dft-benchmark-failed, delta_kJ_per_atom: -11.01}
+        Ca2P2O7: {status: dft-benchmark-failed, delta_kJ_per_atom: -6.2}
+        AlPO4: {status: dft-benchmark-failed, delta_kJ_per_atom: -11.26}
+        Li3PO4: {status: dft-benchmarked, delta_kJ_per_atom: -3.7}
+        LiPO3: {status: dft-benchmark-failed, delta_kJ_per_atom: -9.78}
+        LiPO3 glass: {status: dft-unbenchmarked, delta_kJ_per_atom: -12.96}
+        Ca(PO3)2 glass: {status: dft-unbenchmarked, delta_kJ_per_atom: -13.85}
+        CaSiO3: {status: dft-benchmark-failed, delta_kJ_per_atom: -5.72}
+        Ca2SiO4: {status: dft-benchmark-failed, delta_kJ_per_atom: -5.92}
+        Li2SiO3: {status: dft-benchmarked, delta_kJ_per_atom: -3.48}
+        gibbsite: {status: dft-benchmark-failed, delta_kJ_per_atom: -12.52}
+        LiClO4: {status: dft-benchmark-failed, delta_kJ_per_atom: -33.8}
+    m_K1_amorphous:
+      rule: glass data where they exist (the row's own budget above); otherwise m_am = m_cr + u(DeltaG_g->c)/(n_e F), symbolic while the correction is a gap (the row is then undetermined)
+      ca_po3_2_glass_correction:
+        correction_kJ: 18.872
+        correction_key: glass_crystal_correction_cameta_calphad
+        check_glass_minus_crystal_kJ: 18.872
+        u_correction_kJ: 20.74
+        u_rule: inflation x (half the polymorph span of glass_dfh_cameta_crystal + tabulated u of the glass enthalpy)
+        inflation: 2.0
+        half_span_kJ: 2.0
+        u_glass_kJ: 8.37
+        band_kJ: [0.0, 39.612]
+        analogue_check:
+          per_PO3_kJ: 9.436
+          analogue_bound_per_PO3_kJ: [0, 15.899]
+          inside: true
+        replaces: {h_vit_kJ: 15.899, u_vit_kJ: 31.798}
+        crystalline_reference_row:
+          E_ub_V: 4.9818
+          m_V: 0.19
+          was: {E_ub_V: 4.9664, m_V: 0.2907}
+          for: the crystalline reference row; the governing amorphous row does not use the correction
+      residual_entropy:
+        bound_J_per_K: [0, 11.526]
+        per: formula unit Ca(PO3)2 (R ln 2 per PO3, n_PO3 = 2)
+        span_V: 0.0178
+        ends: {E_ub: 'S_resid at the upper end (most stable glass, highest onset)', E_lb: S_resid = 0}
+    m_svc: {status: rule (per record), rule: 'the potential uncertainty stated by the tier 2 record; if none is stated, one unit of the last printed digit of its potential; never below that digit'}
+    K2: {margin: none (edge 1; K_sp and speciation carry their uncertainty)}
+    K2h: {margin: none beyond tau_k, f_min: 'symbolic: needs a specified criterion for when an orthophosphate fraction sets the film''s K1 (coverage or percolation), a gap'}
+    K3_R1:
+      role: 'input width, not a margin: the Omega_AlPP edge stays 1 (as K2); the a(Al3+) prior carries the width'
+      log10_K_s_width:
+        Al(OH)3 am: {value: 0.322, from: largest |diff_log| of the Al ion-data benchmark (tabulated u not printed)}
+        boehmite: {value: 0.701, from: u_log of the boehmite route}
+      nu_Al: the width enters log10 a(Al3+) once per Al3+ in the formula unit (slope -3 per pH unchanged)
+      active: 'no: K_sp,AlPP is a gap (polyp_log10_ksp_al), so R1 is undetermined whatever the width'
+    K4: {m_S: 'unchanged (thresholds.C4.margin_S_spread, zero: the priors carry the method error)'}
+  # END generated margins_v6
+  proceed_rule: 'K3 and K4 run unless the K1 verdict is falsified at every specified cutoff class'
+  i17a:
+    check: 'Delta_G_gc = G_glass - G_crystal per formula unit is the same-composition form for an anhydrous glass, not for a hydrated amorphous phase'
+    status: 'specified (function E_ub_hydrated_am, symbol Delta_G_gc_w): reference of a hydrated amorphous phase = the crystalline phase or phases of the same Ca:P (and OH, HPO4) composition plus liquid water at a_w = 1; ACP is metastable against crystalline calcium phosphates in water'
+    bound: 'Delta_G_gc_w = G(A) - G(C) - n_hyd mu_w(l, a_w = 1) >= 0; E_ub(A) <= E_ub(C); margins and the sink reference state of the crystalline reference row carry over unchanged; the bound only falsifies, never passes'
+    applies_to: {ACP_amorphous: 'reference row ACP crystalline (beta-TCP formula unit)', HAp_amorphous: 'reference row HAp crystalline', b-TCP_amorphous: 'reference row b-TCP crystalline', a-TCP_amorphous: 'reference row a-TCP crystalline'}
+    rule: 'amorphous row = excluded at a class where its crystalline reference row is excluded (falsified at tier 1), undetermined at every class where it is not excluded or is a gap'
+    label: 'excluded (by the bound dG_g-to-c >= 0, against the crystalline reference plus water)'
+    stay_undetermined: {brushite_amorphous: 'reference row partial at the highest class, not falsified below', Ca2P2O7_amorphous: 'reference row not falsified', OCP_amorphous: 'reference row is a gap', Al_phosphates_amorphous: 'reference rows are gaps', all_amorphous_rows_at_C_lo: 'reference rows not falsified at the lowest class'}
+    not_covered: 'amorphous calcium carbonate (no K1 amorphous row specified)'
+    by_bound_entries: 'margins_v6.tier1_amorphous_by_bound (derived) is the by-bound listing; its falsified (bound) entries are the specified excluded-by-bound cells for ACP, HAp, b-TCP and a-TCP, read with the label above; its undetermined entries stay undetermined'
+    framing_rule: 'a calcium orthophosphate whose crystalline row is excluded at a class is excluded under every nucleus framing at that class (apatite and ACP framings both)'
+  sink_v10:
+    status: 'structure specified; value unbound (the keys are unresolved)'
+    reference_state: 'E_ub (solid LiClO4 consumed, solid product) is the onset for a LiClO4-saturated sink'
+    m_sink:
+      function: m_sink
+      expression: '2 nu_salt (R T / F) ln(a_pm_sat / a_pm)  (= nu_salt (R T / F) ln(a_salt,sat / a_salt), a_salt = a_pm^2)'
+      per: [phase, framing, reaction]
+      nu_salt: 'LiClO4 consumed per transferred electron by the specified solid-salt reaction (one for the exchange route; zero if no salt is consumed)'
+      inputs: {c_salt: regimes.R-cell.parameters.c_liclo4, c_salt_sat: params.liclo4_solubility_pc, gamma_pm: params.liclo4_activity_coefficient_pc, gamma_pm_sat: params.liclo4_activity_coefficient_pc}
+      design_axis: {c_salt: {primary: 1, unit: mol dm^-3, role: design axis, reported_as: 'm_sink(c_salt) curve, never a single number off the primary'}}
+      scale: 'molar, a_pm = gamma_pm c / c_std; a molal source converted by the rule of data/params_README.md Section 9.4'
+      rigorous_bound: 'upper end of c_salt_sat and gamma_pm_sat, lower end of gamma_pm (the evaluation that makes m_sink largest)'
+      sign_analysis:
+        reactant_salt_below_saturation: 'raises the onset by m_sink >= 0 (a_pm <= a_pm_sat for any electrolyte not supersaturated, since the activity rises with concentration)'
+        product_salt_below_saturation: 'lowers the onset (E_ub_prod_unsat <= E_ub); the solid (saturated) product is the worst case for an exclusion, so no product term enters'
+        one_sided: 'raises the upper bound only; not inside the symmetric m_1; never enters the pass side (E_lb)'
+      dependence: {c_salt: 'decreasing; zero at c_salt = c_salt_sat', c_salt_sat: increasing, nu_salt: increasing, gamma_ratio: 'ln(gamma_pm_sat / gamma_pm) enters with either sign; the total stays >= 0'}
+      combine: {rule: linear sum, falsify_edge: E_c - m_expt - m_sink, crossover: E_x- = E_ub + m_expt + m_sink}
+      test: screen_ph.links.K1.tests.K1_falsify_dilute
+    verdict_change: 'a class verdict or crossover that changes when m_sink is bound is verdict-bearing and is reported with the change stated'
+    prose_until_bound: 'every tier-1 exclusion reads "for a LiClO4-saturated sink (solid-salt reference state)"'
+    edge_rule:
+      tolerance: {value: 50, unit: mV}
+      rule: 'where a row''s crossover E_x- lies within the tolerance of a class edge, the prose states the robust threshold (the lowest specified class edge that clears the crossover by at least the tolerance: "excluded at [edge] and above") and names the edge sensitivity (the crossover and its distance to the near edge)'
+      source: crossovers from the ladder; never typed
+  w36:
+    carbonate_k2:
+      framings: [calcite, aragonite, ACC]
+      test: 'Omega_bulk(pi) = a_Ca a_CO3 / K_sp(pi) >= 1 at every state of the specified (Ca_T, C_T, pH, I) grid'
+      keys: {calcite: log10_ksp_calcite, aragonite: log10_ksp_aragonite_25c_i0, ACC: log10_ksp_acc}
+      required_for_label: none (no nacre-type label; each row stands on its own K2 result)
+      reported_not_required: [ACC]
+      labels:
+        calcite: 'calcite (suitable against dissolution, a necessary condition, in [region])'
+        aragonite: 'aragonite (dissolution stability only; formation unsupported at slurry pH and room temperature)'
+        ACC: reported beside the two rows, not required
+      not_tested: 'layered architecture and polymorph structure; alternating aragonite and calcite layers are not nacre-like'
+      falsifiability_control: 'the same test flags undersaturation (Omega_bulk < 1) at the low-dose corner of the grid, for each polymorph; otherwise that polymorph is inconclusive in every row'
+    regime_table:
+      vocabulary: [excluded, open, suitable against dissolution, undetermined, inconclusive]
+      reserved: {feasible: 'verdict row 1 (no v1 cell)', kinetically_stabilised: 'verdict row 4, class A or B named, with thermodynamically excluded at tier 1 beside (no v1 cell)'}
+      prose_open: {phrase: not thermodynamically excluded, means: open, defined: once at first use, bare_not_excluded: never written, implies_feasibility: never}
+      k2_words: {neither_pass_nor_falsified: inconclusive, control_fails: inconclusive (control fails), open: never a K2 word}
+      excluded_footnote: 'excluded (thermodynamic, tier 1: solid-salt upper bound plus margin, for a LiClO4-saturated sink)'
+      amorphous_rows: {cell_word_excluded: 'excluded (by the bound dG_g-to-c >= 0, against the crystalline reference plus water)', cell_word_otherwise: undetermined, rows_excluded_by_bound: [ACP, HAp, b-TCP, a-TCP], rule: 'word of the crystalline reference row; excluded only where that row is excluded; never open, never feasible', every_other_amorphous_row: undetermined, prose: 'excluded by the bound dG_g-to-c >= 0, against the crystalline reference plus water; never excluded on an amorphous framing without that reference, never for a row that reads undetermined'}
+      kinetic_note: 'kinetic stabilisation is not ruled out for phosphates (tier-2 class B records exist in LiPF6 electrolytes, not in fluorine-free ones); never "fails at high voltage" without "thermodynamically"'
+      acid_adjusted_row: {state: params.ph_slurry_acid_adjusted (range from the key), carbonate: 'excluded against dissolution where calcite is undersaturated, with the pH threshold', ca_phosphates: 'tested on K2 in the same state; failures stated in the cell', source: generated from K2 outputs}
+      comparator_window:
+        primary_state: 'params.ph_slurry_acid_adjusted (sourced slurry range after acid adjustment; min to max)'
+        grid_context: 'the K2 acid grid (configs/screen.yaml pH_acid_adjusted) spans the Al passivation window: the published statement (grade D, comparator E5 of params.al_passivation_window) and the Al-O-H model windows at the specified Al level'
+        rule: 'a phase whose first passing pH lies inside the sourced range is not excluded against dissolution in sourced acid-adjusted slurries; its exclusion holds only below that pH, in the lower part of the passivation window'
+        carbonate: 'excluded against dissolution only below the first passing pH of calcite and aragonite, not in sourced acid-adjusted slurries; never "carbonate fails in acid-adjusted slurries" without the pH threshold; never "chemically opposed"'
+        denominators: 'a pass count at or above the first passing pH uses the cells of those pH values'
+    low_voltage:
+      class: not excluded at the nominal cutoff (regimes.R-cell.parameters.cutoff_classes, C_lo)
+      sensitivity_line: {E_c_V: [4], unit: V, role: sensitivity, not a class}
+      wording: 'low voltage up to about [tier-2 onset]'
+      number_source: 'from the ladder (E_svc of the best tier-2 row, with its row id); never typed'
+      no_tier2_row: 'phrase not written; row undetermined (data missing)'
+      carbonate_at_sensitivity_line: 'close to falsification; sentence emitted only if the generated predicate holds (E_x- within m_1 of the line, or tier-2 onset within m_svc of it)'
+  links:
+    K1:
+      regime: R-cell
+      per: [phase, reaction, cutoff E_c, framing]
+      bracket: {upper: 'E_ub (solid-salt LiClO4 sink)', lower: 'E_lb (every ion aqueous, tabulated standard data)', reason: E_ub bounds the onset from above and E_lb from below}
+      tests:
+        - id: K1_pass
+          quantity: E_lb
+          comparator: '>='
+          edge: E_c + m_expt
+          requires: 'transfer premise Delta_G_tr_rel >= 0 supported: measured (form A or B), or computed (premise.computed); plausible only -> inconclusive (pass conditional on the transfer premise); violated -> E_solv replaces E_lb'
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_expt: thresholds.K1.margin_expt}
+          where_expt_missing: {edge: E_c + m_E, label: DFT-decided, params: {m_E: thresholds.K1.margin_dft}}
+          where_premise_computed: {edge: E_c + m_expt + u_tr/(Delta_n_Li*F_c), label: pass (computed premise), combine: linear sum,
+                                   params: {u_tr: thresholds.K1.premise_uncertainty}}
+        - id: K1_falsify
+          quantity: E_ub
+          comparator: '<'
+          edge: E_c - m_expt
+          tier2: 'falsified only if the available tier 2 is also below'
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_expt: thresholds.K1.margin_expt}
+          where_expt_missing: {edge: E_c - m_E, label: DFT-decided, params: {m_E: thresholds.K1.margin_dft}}
+          reference_state: 'LiClO4-saturated sink (solid-salt reference state); every exclusion by this test alone is stated for that sink'
+        - id: K1_falsify_dilute
+          quantity: E_ub
+          comparator: '<'
+          edge: E_c - m_expt - m_sink
+          role: 'exclusion for an electrolyte at the specified LiClO4 concentration (below saturation); m_sink is an added, one-sided margin'
+          tier2: as K1_falsify
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_expt: thresholds.K1.margin_expt, m_sink: thresholds.K1.margin_sink}
+          where_expt_missing: {edge: E_c - m_E - m_sink, label: DFT-decided, params: {m_E: thresholds.K1.margin_dft, m_sink: thresholds.K1.margin_sink}}
+          missing_m_sink: 'undetermined for the dilute electrolyte; the K1_falsify exclusion is stated for the saturated sink only, never upgraded'
+        - id: K1_tier2_pass
+          quantity: E_svc
+          comparator: '>='
+          edge: E_c + m_svc
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_svc: thresholds.K1.margin_service}
+        - id: K1_tier2_below
+          quantity: E_svc
+          comparator: '<'
+          edge: E_c - m_svc
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_svc: thresholds.K1.margin_service}
+      otherwise: inconclusive
+      undetermined: never_passes
+      inconsistent: 'E_lb > E_ub flags a data inconsistency; counted undetermined'
+      anion_consumed: 'a reaction that consumes a solvated anion has no E_lb (solid-salt-only)'
+      premise: {quantity: Delta_G_tr_rel, comparator: '>=', edge: '0', status: [supported, plausible_only, violated],
+                params: [params.hydration_transfer_ca_water_carbonate, params.hydration_transfer_al_water_carbonate,
+                         params.transfer_free_energy_li_water_pc],
+                computed: {
+                  target: 'Delta_G_tr_rel = DG_tr(M) - z DG_tr(Li+), water to PC, one method (cluster-continuum; xtb, PySCF or Psi4)',
+                  test: {quantity: Delta_G_tr_rel_lcb, comparator: '>=', edge: '0', params: {u_tr: thresholds.K1.premise_uncertainty}},
+                  lower_bound: 'Delta_G_tr_rel - k_q u_tr; k_q = one-sided Student-t quantile at level q with N_bench degrees of freedom',
+                  conventions: {
+                    rmse_cap: {primary: 12, plan_value: 15, unit: kJ/mol, applies_to: 'R_bench over set A (Na+, K+, Rb+, Cs+ against Li+ in PC; TI-077, TT-092 to TT-095)',
+                               conditions: ['not below the data spread on the relative quantity (TT-096 to TT-105)', 'f_2 R_cap/(2 F) <= min m_expt of the Ca rows the premise could decide'],
+                               params: thresholds.K1.premise_rmse_cap},
+                    inflation: {Ca2+: 2, Al3+: 3, both_if_hard_multivalent_benchmark: 2, rule: u_tr = f_z R_bench, params: thresholds.K1.premise_inflation},
+                    level: {one_sided_percent: 95, quantile: Student-t, dof: N_bench, N_bench: 4, params: thresholds.K1.premise_level},
+                    combine: {rule: linear sum, edge: E_c + m_1 + u_tr/(Delta_n_Li F)},
+                    cluster_n: {Li+: 4, Na+: 6, K+: 6, Rb+: 6, Cs+: 6, Ca2+: 6, Al3+: 6, Cu2+: 6, Zn2+: 6, Cd2+: 6, Hg2+: 6, La3+: 8, same_in_every_solvent: true},
+                    n_max: 8,
+                    job_wall_cap: {hours: 4, cores: 16, on_cap: 'capped; dependent results unresolved'}},
+                  resolution: 'resolved iff u_tr < abs(Delta_G_tr_rel); otherwise unresolved',
+                  benchmark_failed: 'R_bench > R_cap: no computed pass anywhere; premise unresolved (benchmark failed)',
+                  charge_check: 'counted multivalent rows (one scale) must satisfy abs(computed - measured) <= f_z R_bench; failure -> that charge unresolved; Cu2+ and Hg2+ validate the charge dependence only',
+                  hard_multivalent: 'absent -> Ca2+ and Al3+ labelled extrapolated (ion type); at most indicative, never pass (computed premise)',
+                  labels: [pass (premise measured), pass (computed premise), 'indicative (computed premise, extrapolated (ion type))', computed premise not established,
+                           premise violated (computed), unresolved (computed premise), unresolved (benchmark failed), pass conditional on the transfer premise],
+                  scope: {proxy: 'PC for the cyclic-carbonate class only; EC and linear carbonates are extrapolations', allowed_wording: thermodynamic viability (computed premise)}}}
+      class_rule: 'per class: feasible at sup C, falsified at inf C, otherwise partial with crossovers E_lb - m and E_ub + m'
+    K1_amorphous:
+      role: governing K1 row of the in-situ routes R1 to R3; the crystalline K1 row is the optimistic upper reference
+      regime: R-cell
+      tests:
+        - id: K1am_pass
+          quantity: E_lb_glass
+          comparator: '>='
+          edge: E_c + m_expt
+          requires: transfer premise supported (as K1_pass)
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_expt: thresholds.K1.margin_expt}
+          where_expt_missing: {edge: E_c + m_E, label: DFT-decided, params: {m_E: thresholds.K1.margin_dft}}
+          where_premise_computed: {edge: E_c + m_expt + u_tr/(Delta_n_Li*F_c), label: pass (computed premise), combine: linear sum,
+                                   params: {u_tr: thresholds.K1.premise_uncertainty}}
+        - id: K1am_falsify
+          quantity: E_ub_glass
+          comparator: '<'
+          edge: E_c - m_expt
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_expt: thresholds.K1.margin_expt}
+          where_expt_missing: {edge: E_c - m_E, label: DFT-decided, params: {m_E: thresholds.K1.margin_dft}}
+      labels: {crystalline_pass_amorphous_fail: requires crystallisation, baked_baselines: both framings reported, structure unspecified}
+      nucleus_framings: unchanged (falsified only if falsified under every framing; ACP versus apatite); the ACP framing of ACP, HAp, b-TCP and a-TCP is excluded where the crystalline reference row is excluded, by the bound of I17a (screen_ph.i17a)
+    K2_route:
+      role: K2 of the route products under the governing amorphous framing
+      regime: R-slurry
+      tests:
+        - id: K2_route_glass
+          quantity: Omega_glass
+          comparator: '>='
+          edge: '1'
+          params: {}
+      crystalline: Omega_nu reported beside as the optimistic reference
+    matrix:
+      role: tier 2 only, never gating alone
+      tests:
+        - id: matrix_ceiling
+          quantity: E_svc
+          comparator: '<'
+          edge: E_c - m_svc
+          rule: class A or B only; reported as the film ceiling beside the mineral K1, never changes the mineral verdict
+          params: {E_c: regimes.R-cell.parameters.cutoff_classes, m_svc: thresholds.K1.margin_service}
+      class_C_or_gap: matrix-risk flag
+      thermal_budget: both variants reported
+    baselines:
+      rows: [K1, K2, K4]
+      no: [K3, performance claims]
+      K2: composition-based literature solubility, else undetermined; Hydro-Quebec film solubility labelled inference from chemistry
+    K2h:
+      role: conditional gate; gates a route row only through H2
+      regime: R-slurry
+      tests:
+        - id: K2h_falsify
+          quantity: f_cond
+          comparator: '<'
+          edge: f_min
+          at: slowest plausible rate (tau_lo times the least covered k_hyd) at a covered state
+          params: {f_min: params.hydrolysis_f_min}
+        - id: K2h_not_gating
+          quantity: f_cond
+          comparator: '>='
+          edge: f_min
+          at: fastest plausible rate (tau_hi times the largest covered k_hyd)
+          params: {f_min: params.hydrolysis_f_min}
+      outside_coverage: undetermined, never gating
+      otherwise: inconclusive, with the flip value t_wet_max at both rates
+      evidence_grade: printed beside every verdict
+      condensed: oligophosphates count as condensed; only the orthophosphate fraction is lost
+      f_min_criterion: {form: 'f_min = 1 - p_c, conditional on A1 to A4 (random sites, local failure, harm only through a spanning cluster, one lattice)',
+                        interval: '[1 - p_c(2D lateral), 1 - p_c(3D through-thickness)] = [1 - params.p_c_site_square, 1 - params.p_c_site_sc]; triangular (params.p_c_site_triangular) a 2D lattice sensitivity; one site thick -> 1 (the lateral end is fixed to the square lattice)',
+                        reported_as: sensitivity,
+                        use: 'K2h_falsify at the lower end, K2h_not_gating at the upper end',
+                        keys: [p_c_site_square, p_c_site_triangular, p_c_site_sc],
+                        reporting: 'report-only; f_min a design axis; any K2h statement conditional on f_min'}
+    K3_R1:
+      role: falsifying only
+      regime: R-slurry
+      tests:
+        - id: K3_R1_falsify
+          quantity: Omega_AlPP
+          comparator: '<'
+          edge: '1'
+          rule: 'P(Omega_AlPP < 1) >= p_cred: falsified at that state'
+          params: {}
+        - id: K3_R1_not_excluded
+          quantity: Omega_AlPP
+          comparator: '>'
+          edge: '1'
+          rule: 'P(Omega_AlPP > 1) >= p_cred: not excluded by thermodynamic accessibility, never a pass'
+          params: {}
+      K_sp_gap: undetermined, flip value K_sp* = IAP_AlPP printed
+      a_Al_states: {oxide_equilibrium: a_Al_oxide_eq, pit: params.polyp_al_activity_pit, combined: never}
+      complexation: {function: a_PP_free, gap: 'beta_AlPP = 0 (upper bound on a_PP), flagged'}
+    K3_R2:
+      role: falsifying where covered
+      map: params.coacervate_binodal_map
+      outside_coverage: undetermined
+    K4_R2:
+      role: K4 route form; the closure route of C4 is the alternative
+      regime: R-slurry
+      tests:
+        - id: K4_R2_spread
+          quantity: S_coac
+          comparator: '>='
+          edge: m_S
+          params: {m_S: thresholds.C4.margin_S_spread}
+      cancellation: 'Dgamma_coac = gamma_al_l0 - gamma_al_n0 (site and exclusion terms cancel at coexistence)'
+      admissible_draws_only: 'gamma_al_l >= 0 and gamma_al_n >= 0, each with its adsorption term; refused and counted'
+      undetermined_until: site-free contact difference or a measured contact angle with gamma_nl_c
+      falsified: only if the spreading and closure routes both fail on the same draw
+  rows:
+    stage: [slurry, cell, conversion]
+    slurry: {phases: [brushite, ACP, HAp], conditions: [K2, K3, K4]}
+    cell: {phases: [Ca2P2O7, Ca(PO3)2, AlPO4, Al(PO3)3], conditions: [K1]}
+    conversion: {per: precursor-to-cell-stage pair, fields: [a_w_star, T_conv_lit, T_cure_baseline, hydrolysis, status], conditions: none}
+    film_id: shared by the rows of one film across stages
+    one_film_rule: 'never K1 of a cell-stage phase and K2 to K4 of a slurry-stage phase as one film'

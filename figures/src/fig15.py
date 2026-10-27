@@ -1,0 +1,214 @@
+"""Fig. 15: candidate-by-regime heatmap from the K1 ladder and the K2 production outputs."""
+from matplotlib.patches import Rectangle
+
+import re
+
+from biomin_screen.figures import k1table, k2ph, regimes, style
+
+FIGURE = {
+    "id": "fig15",
+    "name": "regime_map",
+    "description": (
+        "Regime of each candidate phase: K2 in the as-prepared slurry and at each acid-adjusted pH, "
+        "and K1 per cutoff class and framing."),
+    "width": "double",
+    "height_cm": 10.0,
+    "schema": "figures/src/schemas/ladder.schema.json",
+    "input": "results/pourbaix/ladder/ladder.csv",
+    "aux": {
+        "k2": "results/screen/k2_grid_ph/summary.json",
+        "perph": "results/screen/k2_perph_decade/perph.csv",
+        "acid": "results/screen/k2_acid_decade/summary.json",
+        "alkaline": "results/screen/k2_alkaline_decade/summary.json",
+        "regime_table": "results/tables/regime_table.csv",
+        "cutoffs": "configs/thresholds.yaml",
+    },
+}
+
+STAGES = ("slurry", "cell", "comparator")  # the ladder groups drawn; the carbonate control group follows
+FRAMINGS = ("crystalline", "amorphous")
+AGGREGATE = ("ALL", "-")
+CLASS_COLUMNS = (("C_lo", "k1_class_lfp"), ("C_mid", "k1_class_42_43"), ("C_hi", "k1_class_44_45"))
+SUITABLE = "suitable against dissolution"
+POLYMORPHS = ("calcite", "aragonite", "ACC")
+K1_ON = "calcite"  # the ladder's CaCO3 control row is drawn on this carbonate row
+# The regime table names its rows by id; K2 states are read per ladder phase.
+TABLE_ROW = {"hap": "HAp", "acp": "ACP", "btcp": "b-TCP", "ocp": "OCP", "brushite": "brushite", "atcp": "a-TCP",
+             "li_ortho": "Li3PO4", "calcite": "calcite", "aragonite": "aragonite", "acc": "ACC"}
+# Rows of the regime table that carry no first-pass pH (brushite and OCP, whose K2 states come from the rerun
+# keys). The check below skips them and refuses any other row that disagrees.
+STALE_IN_TABLE = ("brushite", "OCP")
+TABLE_K1_PHASE = k1table.TABLE_K1_PHASE
+CLASS_OF_COLUMN = {"C_lo": "C_lo", "C_mid": "C_mid", "C_hi": "C_hi"}
+LABELS = {
+    "brushite": "brushite", "ACP": "ACP", "HAp": "HAp", "OCP": "OCP", "b-TCP": "$\\beta$-TCP",
+    "a-TCP": "$\\alpha$-TCP", "Li3PO4": "Li$_3$PO$_4$", "Ca2P2O7": "Ca$_2$P$_2$O$_7$",
+    "Ca(PO3)2 / Ca-polyphosphate glass": "Ca(PO$_3$)$_2$ glass", "AlPO4": "AlPO$_4$",
+    "Al(PO3)3": "Al(PO$_3$)$_3$", "Al-polyphosphate (R1 gel)": "Al polyphosphate gel",
+    "(LiPO3)n Hydro-Quebec film": "(LiPO$_3$)$_n$ film", "baked aluminophosphate (Tsinghua)": "baked aluminophosphate",
+    "CaSiO3": "CaSiO$_3$", "Ca2SiO4": "Ca$_2$SiO$_4$", "Li2SiO3": "Li$_2$SiO$_3$",
+    "calcite": "calcite", "aragonite": "aragonite", "ACC": "ACC",
+}
+GAP_COL, GAP_GROUP = 0.6, 0.8
+W_K2 = 1.0  # width of the as-prepared K2 column
+W_PH = 0.8  # width of one pH column of the acid-adjusted state
+GAP_SUB = 0.3
+
+
+def ladder_rows(data):
+    """({phase: {class: specified word}} per framing, phases by group): the K1 aggregate rows."""
+    cells, groups = {}, {s: [] for s in STAGES}
+    for r in data["rows"]:
+        if r["framing"] not in FRAMINGS or r["reaction_id"] not in AGGREGATE:
+            continue
+        verdicts = {c: r[col] for c, col in CLASS_COLUMNS}
+        if r["stage"] == "control":
+            if r["phase"] != "CaCO3":
+                raise ValueError("fig15: unexpected control phase %r" % r["phase"])
+            key = (K1_ON, r["framing"])
+        elif r["stage"] in STAGES:
+            key = (r["phase"], r["framing"])
+            if r["phase"] not in LABELS:
+                raise ValueError("fig15: no display label for phase %r" % r["phase"])
+            if r["phase"] not in groups[r["stage"]]:
+                groups[r["stage"]].append(r["phase"])
+        else:
+            continue
+        if key in cells:
+            raise ValueError("fig15: two aggregate rows for %s %s" % key)
+        out = {}
+        for c, v in verdicts.items():
+            out[c] = None if v == "n/a" else regimes.word({"falsified": "falsified", "inconclusive": "inconclusive",
+                                                          "undetermined": "undetermined"}[v])
+        cells[key] = out
+    return cells, groups
+
+
+def table_k1(table):
+    """The K1 cells the regime table states, keyed (ladder phase, framing), the carbonate on its calcite row."""
+    return k1table.table_k1(table, K1_ON)
+
+
+def k1_cells(data, table):
+    """The drawn K1 cells: the ladder's, with every cell the regime table states taken from the table."""
+    cells, groups = ladder_rows(data)
+    for key, by_class in table_k1(table).items():
+        if key not in cells:
+            raise ValueError("fig15: the regime table has K1 cells for %s %s, which the ladder does not" % key)
+        for c, w in by_class.items():
+            cells[key][c] = w
+    return cells, groups
+
+
+def first_pass(by_ph):
+    """Lowest pH with a passing cell, or None."""
+    hits = [ph for ph, st in by_ph.items() if st.n_pass]
+    return min(hits) if hits else None
+
+
+def check_regime_table(table, states):
+    """Refuse the figure if the first-pass pH of a regime-table row differs from the per-pH states.
+
+    The table and the figure read the same K2 outputs, so a difference means one of them is stale. The
+    rows listed in STALE_IN_TABLE are skipped; returns the ids of the rows checked.
+    """
+    checked = []
+    for r in table["rows"]:
+        if r["column"] != "acid" or r["row_id"] not in TABLE_ROW:
+            continue
+        phase = TABLE_ROW[r["row_id"]]
+        if phase in STALE_IN_TABLE:
+            continue
+        m = re.search(r"NumRegAcidFirst\w+=([0-9.]+)", r["numbers"])
+        got = first_pass(states[phase]["acid"])
+        if (float(m.group(1)) if m else None) != got:
+            raise ValueError("fig15: the regime table has first pass pH %s for %s, the per-pH tables %s"
+                             % (m.group(1) if m else None, phase, got))
+        checked.append(r["row_id"])
+    return checked
+
+
+def acid_cells(states):
+    """{phase: {pH: State}} of the acid-adjusted state."""
+    return {ph: v["acid"] for ph, v in states.items()}
+
+
+def processing_cells(states):
+    return {ph: k2ph.processing(v["alkaline"]) for ph, v in states.items()}
+
+
+def class_labels(cutoffs):
+    cls = cutoffs["screen_ph"]["margins_v6"]["cutoff_classes"]
+    out = []
+    for key, _col in CLASS_COLUMNS:
+        v = [float(x) for x in cls[key]["E_c_V"]]
+        out.append("%g" % v[0] if len(v) == 1 else "%g–%g" % (min(v), max(v)))
+    return out
+
+
+def match(table, phase):
+    """The entry of `table` for a ladder phase: exact name, else the one entry whose name the phase starts with."""
+    if phase in table:
+        return table[phase]
+    hits = [k for k in table if phase.startswith(k) and len(k) > 3]
+    return table[hits[0]] if len(hits) == 1 else None
+
+
+def build(data, root, aux):
+    import matplotlib.pyplot as plt
+
+    k1, groups = k1_cells(data, aux["regime_table"])
+    states = k2ph.states(aux["perph"], aux["k2"], aux["acid"], aux["alkaline"])
+    check_regime_table(aux["regime_table"], states)
+    proc, acid = processing_cells(states), acid_cells(states)
+    acid_ph = sorted({p for by in acid.values() for p in by})
+    alk_ph = sorted({p for v in states.values() for p in v["alkaline"]})
+    fills = regimes.fills(root)
+    lw = style.min_line_pt(root)
+    order = [list(groups[s]) for s in STAGES] + [list(POLYMORPHS)]
+    y, ticks, labels, cur = {}, [], [], 0.0
+    for grp in order:
+        if not grp:
+            continue
+        if y:
+            cur -= GAP_GROUP
+        for ph in grp:
+            y[ph] = cur
+            ticks.append(cur)
+            labels.append(LABELS[ph])
+            cur -= 1.0
+    x_proc = 0.0
+    x_acid = [W_K2 + GAP_SUB + k * W_PH for k in range(len(acid_ph))]
+    x0 = [x_acid[-1] + W_PH + GAP_COL + k * (len(FRAMINGS) + GAP_COL) for k in range(len(CLASS_COLUMNS))]
+    fig, ax = plt.subplots(figsize=style.figsize(FIGURE["width"], FIGURE["height_cm"], root))
+
+    def cell(x, ph, word, w=1.0, high=False, cell_id=None):
+        if word is not None:
+            rect = Rectangle((x, y[ph] - 0.5), w, 1.0, facecolor=fills[word], edgecolor="black",
+                             linewidth=lw, hatch=regimes.hatch(word, high and word == SUITABLE))
+            rect.cell_id = cell_id
+            ax.add_patch(rect)
+
+    for ph in y:
+        st = match(proc, ph)
+        if st is not None:
+            cell(x_proc, ph, st.word, W_K2, st.high)
+        per = match(acid, ph)
+        for x, p in zip(x_acid, acid_ph):
+            if per is not None:
+                cell(x, ph, per[p].word, W_PH, per[p].high)
+        for fr in FRAMINGS:
+            verdicts = k1.get((ph, fr))
+            if verdicts:
+                for k, (cls, _c) in enumerate(CLASS_COLUMNS):
+                    cell(x0[k] + FRAMINGS.index(fr), ph, verdicts[cls], cell_id=(ph, fr, cls))
+    ax.set_xlim(-0.2, x0[-1] + len(FRAMINGS) + 0.2)
+    ax.set_ylim(min(y.values()) - 0.7, max(y.values()) + 0.7)
+    ax.set_xticks([x_proc + W_K2 / 2] + [x + W_PH / 2 for x in x_acid] + [x + len(FRAMINGS) / 2 for x in x0],
+                  ["%g–%g" % (alk_ph[0], alk_ph[-1])] + ["%g" % p for p in acid_ph] + class_labels(aux["cutoffs"]))
+    ax.set_yticks(ticks, labels)
+    ax.tick_params(length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    ax.set_xlabel("K2 slurry pH, then K1 cutoff class (V vs Li$^{+}$/Li)")
+    return fig

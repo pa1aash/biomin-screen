@@ -1,0 +1,28 @@
+{
+ "id": "fig10",
+ "name": "formation_benchmark",
+ "inputs": ["results/pourbaix/benchmark/formation_benchmark_table.csv", "results/pourbaix/benchmark/formation_benchmark_table.json"],
+ "axes": [
+  {"frame": {"xscale": "linear", "yscale": "linear", "xlim": [-37.0, 8.21021], "ylim": [-19.1, 0.7], "xticks": [-40.0, -30.0, -20.0, -10.0, 0.0, 10.0], "yticks": [0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.8, -13.8, -14.8, -16.6, -18.4], "xticklabels": ["\u221240", "\u221230", "\u221220", "\u221210", "0", "10"], "yticklabels": ["$\\beta$-TCP", "Li$_3$PO$_4$", "HAp", "$\\alpha$-TCP", "Ca$_2$P$_2$O$_7$", "LiPO$_3$", "monetite", "AlPO$_4$", "LiPO$_3$ glass", "Ca(PO$_3$)$_2$ glass", "brushite", "P$_2$O$_5$", "Li$_2$SiO$_3$", "CaSiO$_3$", "Ca$_2$SiO$_4$", "gibbsite", "LiClO$_4$"], "xlabel": "DFT $-$ experiment (kJ mol$^{-1}$ atom$^{-1}$)", "ylabel": "", "panel": ""}, "artists": [
+   {"kind": "rect", "geom": [-5.21021, -19.1, 10.4204, 19.8], "face": "#9999994c", "hatch": "None"},
+   {"kind": "line", "x": [0.0, 0.0], "y": [0.0, 1.0], "color": "#000000ff", "linestyle": "-", "marker": "None"},
+   {"kind": "line", "x": [-19.32], "y": [-11.0], "color": "#0072b2ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-4.68], "y": [-2.0], "color": "#d55e00ff", "linestyle": "None", "marker": "o"},
+   {"kind": "line", "x": [-3.6], "y": [0.0], "color": "#009e73ff", "linestyle": "None", "marker": "o"},
+   {"kind": "line", "x": [-4.76], "y": [-3.0], "color": "#e69f00ff", "linestyle": "None", "marker": "o"},
+   {"kind": "line", "x": [-16.15], "y": [-10.0], "color": "#cc79a7ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-11.01], "y": [-6.0], "color": "#56b4e9ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-6.2], "y": [-4.0], "color": "#000000ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-11.26], "y": [-7.0], "color": "#0072b2ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-3.7], "y": [-1.0], "color": "#d55e00ff", "linestyle": "None", "marker": "o"},
+   {"kind": "line", "x": [-9.78], "y": [-5.0], "color": "#009e73ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-12.96], "y": [-8.0], "color": "#e69f00ff", "linestyle": "None", "marker": "D"},
+   {"kind": "line", "x": [-13.85], "y": [-9.0], "color": "#cc79a7ff", "linestyle": "None", "marker": "D"},
+   {"kind": "line", "x": [-5.72], "y": [-13.8], "color": "#56b4e9ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-5.92], "y": [-14.8], "color": "#000000ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-3.48], "y": [-12.8], "color": "#0072b2ff", "linestyle": "None", "marker": "o"},
+   {"kind": "line", "x": [-12.52], "y": [-16.6], "color": "#d55e00ff", "linestyle": "None", "marker": "s"},
+   {"kind": "line", "x": [-33.8], "y": [-18.4], "color": "#009e73ff", "linestyle": "None", "marker": "s"}
+  ]}
+ ]
+}
