@@ -55,7 +55,7 @@ sidecars (`figures/*.json`, same tolerance), not through image bytes, which depe
     examples/            add_a_candidate.md and a runnable example phase
     scripts/             numbers.py, check.py, screen.py
 
-## What is and is not included
+## Contents
 
 Included: the screening code, the parameter file and evidence table with grades, the configurations, the cached
 Materials Project data (CC BY 4.0, attributed; no key needed), the stored outputs the tables read, the scripts for every
